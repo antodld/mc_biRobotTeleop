@@ -1,0 +1,54 @@
+---
+states:
+  BiTeleopTask_1:
+    base: BiRobotTeleoperation_Task
+    name: biRobotTask_1
+    stiffness: 40
+    weight: 20
+    robot_1:
+      name: rhps1
+      link: LeftHand
+      unactive_joints: ["Root","CHEST_P","CHEST_Y"]
+      limb_map:
+        left_hand: "L_WRIST_Y_LINK"
+        right_hand: "R_WRIST_Y_LINK"
+        left_arm: "L_SHOULDER_Y_LINK"
+        right_arm: "L_SHOULDER_Y_LINK"
+        left_forearm: "L_ELBOW_Y_LINK"
+        right_forearm: "R_ELBOW_Y_LINK"  
+        pelvis: "BODY" 
+    robot_2: 
+      name: "robot_2"
+      link: RightArm
+      unactive_joints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
+      limb_map:
+        left_hand: "L_WRIST_Y_S"
+        right_hand: "R_WRIST_Y_S"
+        left_arm: "L_SHOULDER_Y_S"
+        right_arm: "R_SHOULDER_Y_S"
+        left_forearm: "R_ELBOW_P_S"
+        right_forearm: "R_ELBOW_P_S" 
+        pelvis: "WAIST_Y_S" 
+    human:
+      convex:
+        arm:
+          radius: 0.05
+          axis: [0,1,0]
+          length: [0.2,0]
+        forearm:
+          radius: 0.03
+          length: [0.2,0.]    
+          axis: [0,1,0]
+        hand:
+          radius: 0.06
+          length: [0.0,0.1]    
+          axis: [0,1,0]
+  
+  BiTeleopTask_2:
+    base: BiTeleopTask_1
+    name: biRobotTask_2
+    robot_1:
+      link: LeftArm
+    robot_2:
+      link: RightHand
+

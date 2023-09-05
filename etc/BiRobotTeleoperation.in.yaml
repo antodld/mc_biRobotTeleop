@@ -56,8 +56,11 @@ states:
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
-    stiffness: 50
+    stiffness: 100
     weight: 500
+    linearWeight:
+      weightRange: [20,700]
+      distanceRange: [0.3,0.1]
     robot_1:
       name: rhps1
       link: LeftHand
@@ -128,7 +131,7 @@ states:
     unactiveJoints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
     frame: R_WRIST_Y_S        
 
-  HumanHandTasks:
+  HumanHandTrajTasks:
     base: MetaTasks
     tasks:
       Human_1_Right:
@@ -137,12 +140,13 @@ states:
           robot: human_1
           frame: LHandLink
           stiffness: 100
-          weight: 10
+          weight: 0
           dimWeight: [0,0,0,1,1,1]
           unactiveJoints: ["Root"]
           targetFrame:
             robot: robot_2
             frame: R_SHOULDER_Y_S
+            translation: [0.,0.,0]
           completion:
             eval: 0
       Human_2_Left:
@@ -154,10 +158,37 @@ states:
           targetFrame:
             robot: rhps1
             frame: L_SHOULDER_Y_LINK
+            translation: [0.,0.1,0]
             controlPoints: [[0,0.8,0]]
           stiffness: 100
           dimWeight: [0,0,0,1,1,1]
           weight: 10
+          duration : 5
+          completion:
+            eval: 0
+
+  HumanHandTasks:
+    base: MetaTasks
+    tasks:
+      Human_1_Right:
+          type: transform
+          name: Human_1_RightHand
+          robot: human_1
+          frame: LHandLink
+          stiffness: 100
+          weight: 10
+          unactiveJoints: ["Root"]
+          completion:
+            eval: 0
+      Human_2_Left:
+          type: transform
+          name: Human_2_LeftHand
+          robot: human_2
+          frame: RHandLink
+          unactiveJoints: ["Root"]
+          stiffness: 100
+          weight: 10
+          duration : 5
           completion:
             eval: 0
 
@@ -198,12 +229,37 @@ states:
       unactiveJoints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
       frame: R_SHOULDER_Y_S
       dimWeight: [1,1,1,0,0,0]   
-  
+    
+  RobotForearm_1:
+    base: RobotArm_1
+    human_targetLimb: LeftForearm
+    task:
+      frame: L_ELBOW_Y_LINK
+
+  RobotForearm_2:
+    base: RobotArm_2
+    human_targetLimb: RightForearm
+    task:
+      frame: R_ELBOW_P_S
+
+  RobotHand_1:
+    base: RobotArm_1
+    human_targetLimb: LeftHand
+    task:
+      frame: L_WRIST_Y_LINK
+
+  RobotHand_2:
+    base: RobotArm_2
+    human_targetLimb: RightHand
+    task:
+      frame: R_WRIST_Y_S
+
   BiTeleop_RobotArm_1:
     base: RobotArm_1
     completion_eval: 0
     weight: 20
     stiffness: 20
+  
   BiTeleop_RobotArm_2:
     base: RobotArm_2
     completion_eval: 0
@@ -215,8 +271,7 @@ states:
     human_targetLimb: LeftForearm
     task:
       frame: L_ELBOW_Y_LINK
-
-
+  
   BiTeleop_RobotForearm_2:
     base: BiTeleop_RobotArm_2
     human_targetLimb: RightForearm
@@ -228,7 +283,7 @@ states:
     human_targetLimb: LeftHand
     task:
       frame: L_WRIST_Y_LINK
-
+  
   BiTeleop_RobotHand_2:
     base: BiTeleop_RobotArm_2
     human_targetLimb: RightHand
@@ -236,13 +291,24 @@ states:
       frame: R_WRIST_Y_S
 
 
-  BiTeleop:
+  BiTeleop::Trajectory:
     base: Parallel
     states: 
     - BiTeleopTask_1
     - BiTeleopTask_2
-    # - RobotDamping_1
-    # - RobotDamping_2
+    - BiTeleop_RobotArm_1
+    - BiTeleop_RobotArm_2
+    - BiTeleop_RobotForearm_1
+    - BiTeleop_RobotForearm_2
+    - BiTeleop_RobotHand_1
+    - BiTeleop_RobotHand_2
+    - HumanHandTrajTasks
+
+  BiTeleop::Free:
+    base: Parallel
+    states: 
+    - BiTeleopTask_1
+    - BiTeleopTask_2
     - BiTeleop_RobotArm_1
     - BiTeleop_RobotArm_2
     - BiTeleop_RobotForearm_1
@@ -256,11 +322,16 @@ states:
     states:
     - RobotArm_1
     - RobotArm_2
+    - RobotForearm_1
+    - RobotForearm_2
+    - RobotHand_1
+    - RobotHand_2
 
 
 transitions:
 - [BiRobotTeleoperation_Initial, OK, PostureImitation, Strict]
-- [PostureImitation, OK, BiTeleop, Auto]
+- [PostureImitation, OK, BiTeleop::Trajectory, Auto]
+- [BiTeleop::Trajectory, OK, BiTeleop::Free, Auto]
 
 # Initial state
 init: BiRobotTeleoperation_Initial
