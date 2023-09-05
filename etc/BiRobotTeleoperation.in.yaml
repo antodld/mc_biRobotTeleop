@@ -58,6 +58,8 @@ states:
     name: biRobotTask_1
     stiffness: 100
     weight: 500
+    arrow:
+      shaft_diam: 0.005
     linearWeight:
       weightRange: [20,700]
       distanceRange: [0.3,0.1]
@@ -103,6 +105,8 @@ states:
   BiTeleopTask_2:
     base: BiTeleopTask_1
     name: biRobotTask_2
+    arrow:
+      color: [0,0,255,1]
     robot_1:
       link: LeftArm
     robot_2:
