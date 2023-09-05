@@ -1,3 +1,7 @@
 add_fsm_state_simple(BiRobotTeleoperation_Initial)
+add_fsm_state_simple(BiRobotTeleoperation_Task)
+add_fsm_state_simple(HandDamping)
+add_fsm_state_simple(RelativePose)
+
 
 add_fsm_data_directory(data)
