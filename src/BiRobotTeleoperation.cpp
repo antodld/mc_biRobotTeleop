@@ -1,7 +1,8 @@
 #include "BiRobotTeleoperation.h"
 #include <mc_rbdyn/RobotLoader.h>
-
+#include "convexViz.h"
 #include "yaml_path.h"
+#include <mc_tasks/biRobotTeleopTask.h>
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -25,6 +26,9 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   datastore().make<bilateralTeleop::HumanPose>("human_1",hp_1);
   datastore().make<bilateralTeleop::HumanPose>("human_2",hp_2);
 
+  auto n = mc_rtc::ROSBridge::get_node_handle();
+  sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
+
   mc_rtc::log::success("BiRobotTeleoperation init done ");
 }
 
@@ -40,6 +44,29 @@ bool BiRobotTeleoperation::run()
   updateHumanPose(human_2,hp_2);
   datastore().assign<bilateralTeleop::HumanPose>("human_1",hp_1);
   datastore().assign<bilateralTeleop::HumanPose>("human_2",hp_2);
+
+  if (datastore().has("BiTeleopTask_1_tasks"))
+  {
+    markers_.markers.clear();
+    std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>> tasks;
+    datastore().get<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>("BiTeleopTask_1_tasks",tasks);
+
+    auto hp = tasks[0]->getHumanPose();
+    hp_1 = hp[0]; hp_2 = hp[1];
+    size_t id = 0;
+    for (int partInt = bilateralTeleop::Limbs::LeftHand ; partInt <= bilateralTeleop::Limbs::RightArm ; partInt++)
+    {
+        bilateralTeleop::Limbs part = static_cast<bilateralTeleop::Limbs>(partInt);
+        auto cvx_1 = hp_1.getConvex(part);
+        auto cvx_2 = hp_2.getConvex(part);
+        markers_.markers.push_back(fromCylinder("control/env_1/ground","human_1_" + bilateralTeleop::limb2Str(part),id,cvx_1,sva::PTransformd::Identity()));
+        markers_.markers.push_back(fromCylinder("control/env_1/ground","human_2_" + bilateralTeleop::limb2Str(part),id+1,cvx_2,sva::PTransformd::Identity()));
+        id +=2;
+    }
+    
+    sch_pub_.publish(markers_);
+  }
+
 
   return mc_control::fsm::Controller::run();
 }
