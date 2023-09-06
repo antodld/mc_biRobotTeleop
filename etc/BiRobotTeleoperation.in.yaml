@@ -52,56 +52,99 @@ contacts:
   r1Surface: RightFoot
   r2Surface: AllGround
 
+human:
+  limb_map:
+    left_hand: "LHandLink"
+    right_hand: "RHandLink"
+    left_arm: "LArmLink"
+    right_arm: "RArmLink"
+    left_forearm: "LForearmLink"
+    right_forearm: "RForearmLink" 
+    pelvis: "HipsLink" 
+
 states:
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
     stiffness: 100
     softMaxGain: 10
+    deltaDistGain: 0.1
     weight: 500
     arrow:
       shaft_diam: 0.005
     linearWeight:
-      weightRange: [20,700]
+      weightRange: [20,300]
       distanceRange: [0.3,0.1]
     robot_1:
       name: rhps1
-      links: ["LeftHand"]
+      links: [LeftHand]
       unactive_joints: ["Root","CHEST_P","CHEST_Y"]
       limb_map:
-        left_hand: "L_WRIST_Y_LINK"
-        right_hand: "R_WRIST_Y_LINK"
-        left_arm: "L_SHOULDER_Y_LINK"
-        right_arm: "L_SHOULDER_Y_LINK"
-        left_forearm: "L_ELBOW_Y_LINK"
-        right_forearm: "R_ELBOW_Y_LINK"  
-        pelvis: "BODY" 
+        left_hand: 
+          name: "L_WRIST_Y_LINK"
+          axis: [0,0,-1]
+        right_hand: 
+          name: "R_WRIST_Y_LINK"
+          axis: [0,0,1]
+        left_arm: 
+          name: "L_SHOULDER_Y_LINK"
+          axis: [0,0,-1]
+        right_arm: 
+          name: "L_SHOULDER_Y_LINK"
+          axis: [0,0,1]
+        left_forearm:
+          name: "L_ELBOW_Y_LINK"
+          axis: [0,0,-1]
+        right_forearm: 
+          name: "R_ELBOW_Y_LINK"  
+          axis: [0,0,1]
+        pelvis:
+          name: "BODY" 
     robot_2: 
       name: "robot_2"
       links: ["RightArm","RightForearm","RightHand"]
       unactive_joints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
       limb_map:
-        left_hand: "L_WRIST_Y_S"
-        right_hand: "R_WRIST_Y_S"
-        left_arm: "L_SHOULDER_Y_S"
-        right_arm: "R_SHOULDER_Y_S"
-        left_forearm: "R_ELBOW_P_S"
-        right_forearm: "R_ELBOW_P_S" 
-        pelvis: "WAIST_Y_S" 
+        left_hand:
+          name: "L_WRIST_Y_S"
+          axis: [0,0,1]
+        right_hand: 
+          name: "R_WRIST_Y_S"
+          axis: [0,0,-1]
+        left_arm:
+          name: "L_SHOULDER_Y_S"
+          axis: [0,0,1]
+        right_arm:
+          name: "R_SHOULDER_Y_S"
+          axis: [0,0,-1]
+        left_forearm:
+          name: "L_ELBOW_P_S"
+          axis: [0,0,1]
+        right_forearm:
+          name: "R_ELBOW_P_S" 
+          axis: [0,0,-1]
+        pelvis: 
+          name: "WAIST_Y_S" 
     human:
       convex:
         arm:
           radius: 0.05
-          axis: [0,1,0]
-          length: [0.2,0]
+          length: [0,0.2]
+          axis:
+            left: [0,1,0]
+            right: [0,-1,0]
         forearm:
           radius: 0.03
-          length: [0.2,0.]    
-          axis: [0,1,0]
+          length: [0.,0.2]    
+          axis:
+            left: [0,1,0]
+            right: [0,-1,0]
         hand:
           radius: 0.06
           length: [0.0,0.1]    
-          axis: [0,1,0]
+          axis:
+            left: [0,1,0]
+            right: [0,-1,0]
   
   BiTeleopTask_2:
     base: BiTeleopTask_1
@@ -109,8 +152,9 @@ states:
     arrow:
       color: [0,0,255,1]
     robot_1:
-      links: ["LeftArm","LeftForearm",LeftHand"]
+      links: [LeftArm,LeftForearm,LeftHand]
     robot_2:
+      isMainRobot: 0
       links: ["RightHand"]
 
   RobotDamping_1:
@@ -145,7 +189,7 @@ states:
           robot: human_1
           frame: LHandLink
           stiffness: 100
-          weight: 0
+          weight: 10
           dimWeight: [0,0,0,1,1,1]
           unactiveJoints: ["Root"]
           targetFrame:
@@ -153,7 +197,7 @@ states:
             frame: R_SHOULDER_Y_S
             translation: [0.,0.,0]
           completion:
-            eval: 0
+            timeElapsed: true
       Human_2_Left:
           type: bspline_trajectory
           name: Human_2_LeftHand
@@ -170,7 +214,7 @@ states:
           weight: 10
           duration : 5
           completion:
-            eval: 0
+            timeElapsed: true
 
   HumanHandTasks:
     base: MetaTasks
@@ -262,13 +306,13 @@ states:
   BiTeleop_RobotArm_1:
     base: RobotArm_1
     completion_eval: 0
-    weight: 20
+    weight: 100
     stiffness: 20
   
   BiTeleop_RobotArm_2:
     base: RobotArm_2
     completion_eval: 0
-    weight: 20
+    weight: 100
     stiffness: 20
 
   BiTeleop_RobotForearm_1:
@@ -295,32 +339,42 @@ states:
     task:
       frame: R_WRIST_Y_S
 
-
-  BiTeleop::Trajectory:
+  BiRobot::Teleop:
     base: Parallel
-    states: 
+    states:
     - BiTeleopTask_1
     - BiTeleopTask_2
+  
+  Robot::Teleop:
+    base: Parallel
+    states:
     - BiTeleop_RobotArm_1
     - BiTeleop_RobotArm_2
     - BiTeleop_RobotForearm_1
     - BiTeleop_RobotForearm_2
     - BiTeleop_RobotHand_1
     - BiTeleop_RobotHand_2
+  
+  Teleop:
+    base: Parallel
+    states:
+    - Robot::Teleop
+    - BiRobot::Teleop
+
+  Human::Trajectory:
+    base: Parallel
+    states: 
     - HumanHandTrajTasks
 
-  BiTeleop::Free:
+  Human::Free:
     base: Parallel
     states: 
-    - BiTeleopTask_1
-    - BiTeleopTask_2
-    - BiTeleop_RobotArm_1
-    - BiTeleop_RobotArm_2
-    - BiTeleop_RobotForearm_1
-    - BiTeleop_RobotForearm_2
-    - BiTeleop_RobotHand_1
-    - BiTeleop_RobotHand_2
     - HumanHandTasks
+  
+  Human:
+    base: Meta
+    transitions:
+      - [Human::Trajectory,OK,Human::Free,Auto]
   
   PostureImitation:
     base: Parallel
@@ -331,12 +385,16 @@ states:
     - RobotForearm_2
     - RobotHand_1
     - RobotHand_2
-
+  
+  MainState:
+    base: Parallel
+    states:
+    - Teleop
+    - Human
 
 transitions:
 - [BiRobotTeleoperation_Initial, OK, PostureImitation, Strict]
-- [PostureImitation, OK, BiTeleop::Trajectory, Auto]
-- [BiTeleop::Trajectory, OK, BiTeleop::Free, Auto]
+- [PostureImitation, OK, MainState, Auto]
 
 # Initial state
 init: BiRobotTeleoperation_Initial
