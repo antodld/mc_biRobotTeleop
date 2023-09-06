@@ -34,6 +34,8 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
   double weight_ = 10;
   double minDist_ = 0;
   double softMaxGain_ = 10;
+  double deltaDistGain_ = 1;
+  std::vector<double> dist_;
   //Used to get the transfo for the softmax computation
   size_t indx_sotfM = 0;
 

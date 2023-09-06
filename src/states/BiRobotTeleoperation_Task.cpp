@@ -110,13 +110,21 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",hp_2);
 
   std::vector<double> dist;
+  std::vector<double> distVel;
+  std::vector<double> softMaxVec;
+  size_t indx = 0;
   minDist_ = 1e9;
   for(auto & task : biTasks_)
   {
     task->updateHuman(hp_1,hp_2);
     dist.push_back(task->getRelativeTransfo()[indx_sotfM].translation().norm());
     minDist_ = std::min(minDist_ , dist.back()); 
+    if(dist_.size() > indx){distVel.push_back( dist.back() - dist_[indx]);}
+    else{distVel.push_back(0.);}
+    softMaxVec.push_back(dist.back() + deltaDistGain_ * exp(distVel.back()) );
+    indx++;
   }
+  dist_ = dist;
 
   if(weightDistanceRange_.x() != weightDistanceRange_.y())
   {
@@ -152,6 +160,16 @@ void BiRobotTeleoperation_Task::addToLogger(mc_control::fsm::Controller & ctl_)
   logger.addLogEntry( name() + "_reference_weight",[this]() -> const double {return weight_;});
   logger.addLogEntry( name() + "_reference_distance",[this]() -> const double {return minDist_;});
   logger.addLogEntry( name() + "_soft_max_gain",[this]() -> const double {return softMaxGain_;});
+
+}
+
+void BiRobotTeleoperation_Task::teardownLogger(mc_control::fsm::Controller & ctl_)
+{
+  auto & logger = ctl_.logger();
+
+  logger.removeLogEntry(name() + "_reference_weight");
+  logger.removeLogEntry(name() + "_reference_distance");
+  logger.removeLogEntry(name() + "_soft_max_gain");
 
 }
 
