@@ -18,20 +18,16 @@ void BiRobotTeleoperation_Task::configure(const mc_rtc::Configuration & config)
   {
     state_config_("softMaxGain",softMaxGain_);
   }
-  
+  if(state_config_.has("deltaDistGain"))
+  {
+    state_config_("deltaDistGain",deltaDistGain_);
+  }
 }
 
 void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
 
-  mc_rbdyn::Robot & human_1 = ctl_.robots().robot("human_1");
-  mc_rbdyn::Robot & human_2 = ctl_.robots().robot("human_2");
-
-  bilateralTeleop::HumanPose hp_1;
-  bilateralTeleop::HumanPose hp_2;
-  updateHumanPose(human_1,hp_1);
-  updateHumanPose(human_2,hp_2);
   std::vector<std::string> r1_linksName = {};
   std::vector<std::string> r2_linksName = {};
 
@@ -39,6 +35,12 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_2")("name",r2_name_);
   state_config_("robot_1")("links",r1_linksName);
   state_config_("robot_2")("links",r2_linksName);
+
+  bilateralTeleop::HumanPose hp_1;
+  bilateralTeleop::HumanPose hp_2;
+
+  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_1",hp_1);
+  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",hp_2);
 
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
@@ -90,8 +92,8 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   // biTask_ = std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(),r1,r2);
   // biTask_->load(ctl.solver(),state_config_);
   // biTask_->updateHuman(hp_1,hp_2);
-
-  // ctl_.datastore().make<std::shared_ptr<mc_tasks::biRobotTeleopTask>>(biTask_->name()+"_task",biTask_);
+  mc_rtc::log::info("[{}] creat datastore {}",name(),name()+"_tasks" );
+  ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
 
   // ctl_.solver().addTask(biTask_);
 }
@@ -136,7 +138,7 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
 
 
 
-  // ctl_.datastore().assign<std::shared_ptr<mc_tasks::biRobotTeleopTask>>( biTask_->name() +"_task",biTask_);
+  ctl_.datastore().assign<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name() +"_tasks",biTasks_);
 
   output("OK");
   return false;
@@ -160,8 +162,8 @@ void BiRobotTeleoperation_Task::teardown(mc_control::fsm::Controller & ctl_)
   {
     ctl_.solver().removeTask(task);
   }
-  // ctl_.solver().removeTask(biTask_);
-  // ctl_.datastore().remove(biTask_->name()+"_task");
+  ctl_.datastore().remove(name()+"_tasks");
+  teardownLogger(ctl);
 }
 
 EXPORT_SINGLE_STATE("BiRobotTeleoperation_Task", BiRobotTeleoperation_Task)

@@ -15,26 +15,9 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
 
   void teardown(mc_control::fsm::Controller & ctl) override;
 
-  void updateHumanLink(const mc_rbdyn::Robot & human,const std::string & link ,bilateralTeleop::HumanPose & human_pose,const bilateralTeleop::Limbs human_link)
-  {
-    human_pose.setPose(human_link,human.bodyPosW(link));
-    sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() ); 
-    human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link));
-    human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link));
-  }
-  void updateHumanPose(const mc_rbdyn::Robot & human ,bilateralTeleop::HumanPose & human_pose)
-  {
-    updateHumanLink(human,"LHandLink",human_pose,bilateralTeleop::Limbs::LeftHand);
-    updateHumanLink(human,"RHandLink",human_pose,bilateralTeleop::Limbs::RightHand);
-    updateHumanLink(human,"LForearmLink",human_pose,bilateralTeleop::Limbs::LeftForearm);
-    updateHumanLink(human,"RForearmLink",human_pose,bilateralTeleop::Limbs::RightForearm);
-    updateHumanLink(human,"LArmLink",human_pose,bilateralTeleop::Limbs::LeftArm);
-    updateHumanLink(human,"RArmLink",human_pose,bilateralTeleop::Limbs::RightArm);
-    updateHumanLink(human,"HipsLink",human_pose,bilateralTeleop::Limbs::Pelvis);
-
-  }
-
   void addToLogger(mc_control::fsm::Controller & ctl);
+
+  void teardownLogger(mc_control::fsm::Controller & ctl);
 
   std::shared_ptr<mc_tasks::biRobotTeleopTask> biTask_;
 
