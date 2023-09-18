@@ -1,0 +1,87 @@
+  BiTeleopTask_1:
+    base: BiRobotTeleoperation_Task
+    name: biRobotTask_1
+    stiffness: 300
+    softMaxGain: 35
+    deltaDistGain: 5
+    weight: 700
+    arrow:
+      shaft_diam: 0.005
+    linearWeight:
+      weightRange: [20,1000]
+      distanceRange: [0.3,0.1]
+    robot_1:
+      name: rhps1
+      links: [LeftHand]
+      unactive_joints: ["Root","CHEST_P","CHEST_Y"]
+      limb_map:
+        left_hand: 
+          name: "L_WRIST_Y_LINK"
+        right_hand: 
+          name: "R_WRIST_Y_LINK"
+        left_arm: 
+          name: "L_SHOULDER_Y_LINK"
+        right_arm: 
+          name: "R_SHOULDER_Y_LINK"
+        left_forearm:
+          name: "L_ELBOW_Y_LINK"
+        right_forearm: 
+          name: "R_ELBOW_Y_LINK"  
+        pelvis:
+          name: "BODY" 
+    robot_2: 
+      name: "robot_2"
+      links: ["RightArm","RightForearm","RightHand"]
+      unactive_joints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
+      limb_map:
+        left_hand:
+          name: "L_WRIST_Y_S"
+        right_hand: 
+          name: "R_WRIST_Y_S"
+        left_arm:
+          name: "L_SHOULDER_Y_S"
+        right_arm:
+          name: "R_SHOULDER_Y_S"
+        left_forearm:
+          name: "L_ELBOW_P_S"
+        right_forearm:
+          name: "R_ELBOW_P_S" 
+        pelvis: 
+          name: "WAIST_Y_S" 
+    human:
+      convex:
+        arm:
+          radius: 0.05
+          length: 0.2
+          offset:
+            left:
+              rotation: [1.57,0,0]
+            right:
+              rotation: [-1.57,0,0]
+        forearm:
+          radius: 0.03
+          length: 0.2   
+          offset:
+            left:
+              rotation: [1.57,0,0]
+            right:
+              rotation: [-1.57,0,0]
+        hand:
+          radius: 0.06
+          length: 0.1 
+          offset:
+            left:
+              rotation: [1.57,0,0]
+            right:
+              rotation: [-1.57,0,0]
+
+  BiTeleopTask_2:
+    base: BiTeleopTask_1
+    name: biRobotTask_2
+    arrow:
+      color: [0,0,255,1]
+    robot_1:
+      links: [LeftArm,LeftForearm,LeftHand]
+    robot_2:
+      isMainRobot: 0
+      links: ["RightHand"]

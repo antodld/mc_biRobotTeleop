@@ -9,6 +9,8 @@ set(PROJECT_URL "")
 
 project(${PROJECT_NAME} CXX)
 
+include(insert_content.cmake)
+
 # Check if the project is built inside mc_rtc
 if(NOT TARGET mc_rtc::mc_control)
   find_package(mc_rtc REQUIRED)
@@ -18,29 +20,13 @@ add_subdirectory(src)
 
 set(AROBASE "@")
 
+configure_file(etc/BiRobotTeleoperation.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml" @ONLY)
 
-foreach(CONFIG_FILE BiRobotTask)
-  configure_file(etc/${CONFIG_FILE}.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/${CONFIG_FILE}.yaml")
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/${CONFIG_FILE}.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")
+foreach(FILE BiRobotTasks DampingTasks HumanTasks RobotTeleopTasks)
 
-  # add_definitions( -D_${CONFIG_FILE}_CONFIG_PATH=${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc/${CONFIG_FILE} )
-  set( CONFIG_PATH "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc/${CONFIG_FILE}.yaml" )
-  set( CONFIG_PATH_VAR "${CONFIG_FILE}_CONFIG_PATH")
-  
-  # add_definitions( -D${CONFIG_PATH_VAR}=${CONFIG_PATH} )
-
-  message("HERE IS VAR ${CONFIG_PATH_VAR} ")
-  message("HERE IS PATH ${CONFIG_PATH} ")
+  configure_file(etc/${FILE}.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml" @ONLY)
+  insert_content(${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml ${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml ${FILE}.yaml)
 
 endforeach()
 
-
-
-# get_cmake_property(_variableNames VARIABLES)
-# list (SORT _variableNames)
-# foreach (_variableName ${_variableNames})
-#     message(STATUS "${_variableName}=${${_variableName}}")
-# endforeach()
-
-configure_file(etc/BiRobotTeleoperation.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")

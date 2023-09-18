@@ -1,0 +1,60 @@
+  HumanHandTrajTasks:
+    base: MetaTasks
+    tasks:
+      Human_1_Right:
+          type: bspline_trajectory
+          name: Human_1_RightHand
+          robot: human_1
+          frame: LHandLink
+          stiffness: 100
+          weight: 10
+          dimWeight: [0,0,0,1,1,1]
+          unactiveJoints: ["Root"]
+          targetFrame:
+            robot: robot_2
+            frame: R_SHOULDER_Y_S
+            translation: [0.,0.,0]
+          completion:
+            timeElapsed: true
+      Human_2_Left:
+          type: bspline_trajectory
+          name: Human_2_LeftHand
+          robot: human_2
+          frame: RHandLink
+          unactiveJoints: ["Root"]
+          targetFrame:
+            robot: rhps1
+            frame: L_SHOULDER_Y_LINK
+            translation: [0.,0.1,0]
+            controlPoints: [[0,0.8,0]]
+          stiffness: 100
+          dimWeight: [0,0,0,1,1,1]
+          weight: 10
+          duration : 5
+          completion:
+            timeElapsed: true
+
+  HumanHandTasks:
+    base: MetaTasks
+    tasks:
+      Human_1_Right:
+          type: transform
+          name: Human_1_RightHand
+          robot: human_1
+          frame: LHandLink
+          stiffness: 100
+          weight: 10
+          unactiveJoints: ["Root"]
+          completion:
+            eval: 0
+      Human_2_Left:
+          type: transform
+          name: Human_2_LeftHand
+          robot: human_2
+          frame: RHandLink
+          unactiveJoints: ["Root"]
+          stiffness: 100
+          weight: 10
+          duration : 5
+          completion:
+            eval: 0

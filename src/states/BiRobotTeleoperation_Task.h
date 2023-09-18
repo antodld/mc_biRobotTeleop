@@ -2,8 +2,8 @@
 
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/biRobotTeleopTask.h>
-#include <bilateralteleop/HumanRobotPose.h>
-#include <bilateralTeleop_dataLink/type.h>
+#include <biRobotTeleop/HumanRobotPose.h>
+#include <biRobotTeleop/type.h>
 
 struct BiRobotTeleoperation_Task : mc_control::fsm::State
 {
@@ -23,8 +23,8 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
 
   std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>> biTasks_;
 
-  std::vector<bilateralTeleop::Limbs> r1_links_ = {};
-  std::vector<bilateralTeleop::Limbs> r2_links_ = {};
+  std::vector<biRobotTeleop::Limbs> r1_links_ = {};
+  std::vector<biRobotTeleop::Limbs> r2_links_ = {};
 
   std::string r1_name_ = "";
   std::string r2_name_ = "";

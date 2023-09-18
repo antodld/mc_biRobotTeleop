@@ -1,0 +1,73 @@
+  RobotDamping_1:
+   base: HandDamping
+   name: Robot_1_HandDamping
+   robot_name: rhps1
+   human_targetLimb: LeftHand
+   human_indx: 0
+   task:
+    type: transform
+    unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
+    frame: LeftHandWrench 
+    dimWeight: [0,0,0,1,1,1]   
+    weight: 30
+    damping: 100
+
+  RobotDamping_2:
+   base: RobotDamping_1
+   name: Robot_2_HandDamping
+   robot_name: robot_2
+   human_indx: 1
+   task:     
+    unactiveJoints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
+    frame: R_WRIST_Y_S        
+
+  BiTeleop_Damping_1_Hand:
+    base: HandDamping
+    human_indx: 0
+    robot_name: rhps1
+    human_targetLimb: LeftHand
+    task:
+      name: Damping_Robot_1_LeftHand
+      dimWeight: [0,0,0,1,1,1]
+      frame: L_WRIST_Y_LINK
+      weight: 10000
+      stiffness: 200
+      unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
+
+  BiTeleop_Damping_2_Hand:
+    base: BiTeleop_Damping_1_Hand
+    human_indx: 1
+    robot_name: robot_2
+    human_targetLimb: RightHand
+    task:
+      name: Damping_Robot_2_RightHand
+      unactiveJoints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
+      frame: R_WRIST_Y_S
+
+  BiTeleop_Damping_1_Forearm:
+    base: BiTeleop_Damping_1_Hand
+    human_targetLimb: LeftForearm
+    task:
+      name: Damping_Robot_1_LefForearm
+      frame: L_ELBOW_Y_LINK
+
+  BiTeleop_Damping_2_Forearm:
+    base: BiTeleop_Damping_2_Hand
+    human_targetLimb: RightForearm
+    task:
+      name: Damping_Robot_2_RightForearm
+      frame: R_ELBOW_P_S
+
+  BiTeleop_Damping_1_Arm:
+    base: BiTeleop_Damping_1_Hand
+    human_targetLimb: LeftArm
+    task:
+      name: Damping_Robot_1_LefArm
+      frame: R_SHOULDER_Y_LINK
+
+  BiTeleop_Damping_2_Arm:
+    base: BiTeleop_Damping_2_Hand
+    human_targetLimb: RightArm
+    task:
+      name: Damping_Robot_2_RightArm
+      frame: R_SHOULDER_Y_S

@@ -8,7 +8,7 @@ void HandDamping::configure(const mc_rtc::Configuration & config)
   stateConfig_("human_indx",h_indx_);
   assert(h_indx_ <= 1);
   stateConfig_("robot_name",r_name_);
-  humanTargetLimb_ = bilateralTeleop::str2Limb(stateConfig_("human_targetLimb"));
+  humanTargetLimb_ = biRobotTeleop::str2Limb(stateConfig_("human_targetLimb"));
 
 
 }
@@ -35,15 +35,15 @@ bool HandDamping::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
 
-  bilateralTeleop::HumanPose h;
+  biRobotTeleop::HumanPose h;
 
   if(h_indx_ == 0)
   {
-    ctl_.datastore().get<bilateralTeleop::HumanPose>("human_1",h);
+    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
   }
   else
   {
-    ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",h);
+    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
   }
 
   sva::PTransformd X_frame0_frame = sva::PTransformd(task_->frame().position().rotation(),Eigen::Vector3d::Zero());

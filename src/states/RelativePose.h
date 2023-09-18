@@ -33,7 +33,7 @@ struct RelativePose : mc_control::fsm::State
   sva::PTransformd X_0_hRef_ = sva::PTransformd::Identity();
   sva::PTransformd X_0_hTarget_ = sva::PTransformd::Identity();
 
-  bilateralTeleop::Limbs humanTargetLimb_;
+  biRobotTeleop::Limbs humanTargetLimb_;
   std::shared_ptr<mc_tasks::TransformTask> task_;
   double completion_eval_ = 0;
 

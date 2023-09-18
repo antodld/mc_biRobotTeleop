@@ -36,11 +36,11 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_1")("links",r1_linksName);
   state_config_("robot_2")("links",r2_linksName);
 
-  bilateralTeleop::HumanPose hp_1;
-  bilateralTeleop::HumanPose hp_2;
+  biRobotTeleop::HumanPose hp_1;
+  biRobotTeleop::HumanPose hp_2;
 
-  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_1",hp_1);
-  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",hp_2);
+  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",hp_1);
+  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",hp_2);
 
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
@@ -52,22 +52,22 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   }
   if (r1_linksName.size() <= r2_linksName.size())
   {
-    bilateralTeleop::Limbs limb = bilateralTeleop::str2Limb(r1_linksName[0]);
+    biRobotTeleop::Limbs limb = biRobotTeleop::str2Limb(r1_linksName[0]);
     for(auto & link : r2_linksName)
     {
       r1_links_.push_back(limb);
       std::cout << link << std::endl;
-      r2_links_.push_back(bilateralTeleop::str2Limb(link));
+      r2_links_.push_back(biRobotTeleop::str2Limb(link));
     }
   }
   else
   {
     indx_sotfM = 1;
-    bilateralTeleop::Limbs limb = bilateralTeleop::str2Limb(r2_linksName[0]);
+    biRobotTeleop::Limbs limb = biRobotTeleop::str2Limb(r2_linksName[0]);
     for(auto & link : r1_linksName)
     {
       r2_links_.push_back(limb);
-      r1_links_.push_back(bilateralTeleop::str2Limb(link));
+      r1_links_.push_back(biRobotTeleop::str2Limb(link));
 
     }
   }
@@ -96,6 +96,16 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
 
   // ctl_.solver().addTask(biTask_);
+
+  auto posture_1 = ctl_.getPostureTask(r1_name_);
+  auto posture_2 = ctl_.getPostureTask(r2_name_);
+  // posture_1->weight(200);
+  // posture_2->weight(200);
+  // posture_1->stiffness(0);
+  // posture_2->stiffness(0);
+  // posture_1->damping(300);
+  // posture_2->damping(3);
+
 }
 
 bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
@@ -103,11 +113,31 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
 
 
 
-  bilateralTeleop::HumanPose hp_1;
-  bilateralTeleop::HumanPose hp_2;
+  biRobotTeleop::HumanPose hp_1;
+  biRobotTeleop::HumanPose hp_2;
 
-  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_1",hp_1);
-  ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",hp_2);
+  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",hp_1);
+  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",hp_2);
+
+  auto posture_1 = ctl_.getPostureTask(r1_name_);
+  auto posture_2 = ctl_.getPostureTask(r2_name_);
+
+  // if(hp_1.getVel(biRobotTeleop::Limbs::LeftHand).linear().norm() < 0.05)
+  // {
+  //   posture_1->damping(100);
+  // }
+  // else
+  // {
+  //   posture_1->damping(3);
+  // }
+  // if(hp_2.getVel(biRobotTeleop::Limbs::RightHand).linear().norm() < 0.05)
+  // {
+  //   posture_2->damping(100);
+  // }
+  // else
+  // {
+  //   posture_2->damping(3);
+  // }
 
   std::vector<double> dist;
   std::vector<double> distVel;
@@ -132,14 +162,14 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
     Eigen::Matrix2d A;
     A << weightDistanceRange_.x() , 1 , weightDistanceRange_.y() ,1;
     const Eigen::Vector2d coeff = A.inverse() * weightRange_; 
-    double w = minDist_ * coeff.x() + coeff.y();
+    const double w = minDist_ * coeff.x() + coeff.y();
     weight_ = std::min(std::max(w,weightRange_.x()),weightRange_.y());
   }
 
   for(size_t i = 0 ; i < biTasks_.size() ; i++)
   {
-    double w = softMax(dist,-softMaxGain_,i);
-    biTasks_[i]->weight(weight_ * w);
+    const double w = softMax(dist,-softMaxGain_,i);
+    biTasks_[i]->weight(std::max( 0.,weight_ * w - deltaDistGain_ * exp(10 * distVel.back())));
   }
 
   // biTask_->updateHuman(hp_1,hp_2);
@@ -181,7 +211,15 @@ void BiRobotTeleoperation_Task::teardown(mc_control::fsm::Controller & ctl_)
     ctl_.solver().removeTask(task);
   }
   ctl_.datastore().remove(name()+"_tasks");
+  auto posture_1 = ctl_.getPostureTask(r1_name_);
+  auto posture_2 = ctl_.getPostureTask(r2_name_);
+  posture_1->weight(10);
+  posture_2->weight(10);
+  posture_1->stiffness(5);
+  posture_2->stiffness(5);
+
   teardownLogger(ctl);
+
 }
 
 EXPORT_SINGLE_STATE("BiRobotTeleoperation_Task", BiRobotTeleoperation_Task)

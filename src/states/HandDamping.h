@@ -3,7 +3,7 @@
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/TransformTask.h>
 #include <mc_tasks/biRobotTeleopTask.h>
-#include <bilateralTeleop_dataLink/type.h>
+#include <biRobotTeleop/type.h>
 
 struct HandDamping : mc_control::fsm::State
 {
@@ -21,7 +21,7 @@ struct HandDamping : mc_control::fsm::State
 
   mc_rtc::Configuration stateConfig_;
 
-  bilateralTeleop::Limbs humanTargetLimb_;
+  biRobotTeleop::Limbs humanTargetLimb_;
   std::shared_ptr<mc_tasks::TransformTask> task_;
 
 

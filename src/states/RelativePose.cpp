@@ -14,7 +14,7 @@ void RelativePose::configure(const mc_rtc::Configuration & config)
 
   if(stateConfig_.has("completion_eval")){stateConfig_("completion_eval",completion_eval_);}
 
-  humanTargetLimb_ = bilateralTeleop::str2Limb(stateConfig_("human_targetLimb"));
+  humanTargetLimb_ = biRobotTeleop::str2Limb(stateConfig_("human_targetLimb"));
 }
 
 void RelativePose::start(mc_control::fsm::Controller & ctl_)
@@ -39,24 +39,25 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);  
   mc_rbdyn::Robot & robot = ctl.robots().robot(r_name_);
 
-  bilateralTeleop::HumanPose h;
+  biRobotTeleop::HumanPose h;
   if(h_indx_ == 0)
   {
-    ctl_.datastore().get<bilateralTeleop::HumanPose>("human_1",h);
+    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
   }
   else
   {
-    ctl_.datastore().get<bilateralTeleop::HumanPose>("human_2",h);
+    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
   }
 
-  X_0_hRef_ = h.getPose(bilateralTeleop::Limbs::Pelvis);
+  X_0_hRef_ = h.getPose(biRobotTeleop::Limbs::Pelvis);
   X_0_hTarget_ = h.getPose(humanTargetLimb_);
 
   const sva::PTransformd & X_0_RbtRef = robot.frame(robotRefFrame_).position();
 
   const sva::PTransformd X_0_taskTarget = ( (X_TargetHuman_TargetRobot_ *  X_0_hTarget_) * (( X_RefHuman_RefRobot_ * X_0_hRef_).inv()) ) *  X_0_RbtRef;
-
+  
   task_->target(X_0_taskTarget);
+
   if( sva::rotationError(X_0_taskTarget.rotation(),task_->frame().position().rotation()).norm() < completion_eval_)
   {
     output("OK");
