@@ -1,5 +1,4 @@
 #include "BiRobotTeleoperation.h"
-#include <mc_rbdyn/RobotLoader.h>
 #include "convexViz.h"
 #include "yaml_path.h"
 #include <mc_tasks/biRobotTeleopTask.h>
@@ -19,12 +18,11 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   
   mc_rbdyn::Robot & human_1 = robots().robot("human_1");
   mc_rbdyn::Robot & human_2 = robots().robot("human_2");
-  biRobotTeleop::HumanPose hp_1;
-  biRobotTeleop::HumanPose hp_2;
-  updateHumanPose(human_1,hp_1);
-  updateHumanPose(human_2,hp_2);
-  datastore().make<biRobotTeleop::HumanPose>("human_1",hp_1);
-  datastore().make<biRobotTeleop::HumanPose>("human_2",hp_2);
+
+  updateHumanPose(human_1,hp_1_);
+  updateHumanPose(human_2,hp_2_);
+  datastore().make<biRobotTeleop::HumanPose>("human_1",hp_1_);
+  datastore().make<biRobotTeleop::HumanPose>("human_2",hp_2_);
 
   auto n = mc_rtc::ROSBridge::get_node_handle();
   sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
@@ -38,12 +36,11 @@ bool BiRobotTeleoperation::run()
   mc_rbdyn::Robot & human_1 = robots().robot("human_1");
   mc_rbdyn::Robot & human_2 = robots().robot("human_2");
 
-  biRobotTeleop::HumanPose hp_1;
-  biRobotTeleop::HumanPose hp_2;
-  updateHumanPose(human_1,hp_1);
-  updateHumanPose(human_2,hp_2);
-  datastore().assign<biRobotTeleop::HumanPose>("human_1",hp_1);
-  datastore().assign<biRobotTeleop::HumanPose>("human_2",hp_2);
+
+  updateHumanPose(human_1,hp_1_);
+  updateHumanPose(human_2,hp_2_);
+  datastore().assign<biRobotTeleop::HumanPose>("human_1",hp_1_);
+  datastore().assign<biRobotTeleop::HumanPose>("human_2",hp_2_);
 
   if (datastore().has("BiTeleopTask_1_tasks"))
   {
@@ -52,13 +49,13 @@ bool BiRobotTeleoperation::run()
     datastore().get<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>("BiTeleopTask_1_tasks",tasks);
 
     auto hp = tasks[0]->getHumanPose();
-    hp_1 = hp[0]; hp_2 = hp[1];
+    hp_1_.setOffset(hp[0].getOffset()); hp_2_.setOffset(hp[1].getOffset());
     size_t id = 0;
     for (int partInt = biRobotTeleop::Limbs::LeftHand ; partInt <= biRobotTeleop::Limbs::RightArm ; partInt++)
     {
         biRobotTeleop::Limbs part = static_cast<biRobotTeleop::Limbs>(partInt);
-        auto cvx_1 = hp_1.getConvex(part);
-        auto cvx_2 = hp_2.getConvex(part);
+        auto cvx_1 = hp[0].getConvex(part);
+        auto cvx_2 = hp[1].getConvex(part);
         markers_.markers.push_back(fromCylinder("control/env_1/ground","human_1_" + biRobotTeleop::limb2Str(part),id,cvx_1,sva::PTransformd::Identity()));
         markers_.markers.push_back(fromCylinder("control/env_1/ground","human_2_" + biRobotTeleop::limb2Str(part),id+1,cvx_2,sva::PTransformd::Identity()));
         id +=2;
@@ -82,8 +79,8 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0)) * alignFeet(robot(),"Foot",robot_2,"Foot") );
 
   
-  human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.6, 0., -0.3)) * alignFeet(robot_2,"Foot",human_1,"Sole") );
-  human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.6, 0., 0)) * alignFeet(robot(),"Foot",human_2,"Sole") );
+  human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., -0.3)) * alignFeet(robot_2,"Foot",human_1,"Sole") );
+  human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0)) * alignFeet(robot(),"Foot",human_2,"Sole") );
 
   mc_control::fsm::Controller::reset(reset_data);
 }

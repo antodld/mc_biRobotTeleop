@@ -58,3 +58,7 @@
           duration : 5
           completion:
             eval: 0
+
+  HumanEstimation:
+    base: HumanPoseEstimation
+    human_indx: 0

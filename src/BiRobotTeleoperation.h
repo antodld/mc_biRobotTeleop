@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <mc_rtc_ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <mc_rbdyn/RobotLoader.h>
 
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {
@@ -51,7 +52,10 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 private:
   
   mc_rbdyn::RobotsPtr external_robots_ = nullptr;
-  
+
+  biRobotTeleop::HumanPose hp_1_;
+  biRobotTeleop::HumanPose hp_2_;
+
   ros::Publisher sch_pub_;
   visualization_msgs::MarkerArray markers_;
 

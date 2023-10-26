@@ -1,0 +1,75 @@
+  HandsTask:
+    base: MetaTasks
+    tasks:
+      LeftHand:
+        type: transform
+        frame: LeftHandWrench
+        activeJoints: ["L_SHOULDER_P",
+                      "L_SHOULDER_R",
+                      "L_SHOULDER_Y",
+                      "L_ELBOW_P",
+                      "L_ELBOW_Y",
+                      "L_WRIST_R",
+                      "L_WRIST_Y",
+                      "L_HAND"]
+        target:
+          translation: [0.35, 0.3, 1]
+          rotation: [0., -1.57, 0.0]
+        completion:
+          eval: 0.05
+      RightHand:
+        type: transform
+        frame: RightHandWrench
+        activeJoints: ["R_SHOULDER_P",
+                      "R_SHOULDER_R",
+                      "R_SHOULDER_Y",
+                      "R_ELBOW_P",
+                      "R_ELBOW_Y",
+                      "R_WRIST_R",
+                      "R_WRIST_Y",
+                      "R_HAND"]
+        target:
+          translation: [0.35, -0.3, 1]
+          rotation: [0., -1.57, 0.0]
+        completion:
+          eval: 0.05   
+    
+  LeftForceDisplay:
+    base: ForceDisplay
+    delay: 0.2
+    integration_window: 5
+    receiver_name: RightForceDisplay
+    task:
+      frame: LeftHandWrench
+      admittance: [0.,0.,0.,0.,0.01,0.01]
+      maxVel:
+        angular: [10,1,1]
+        linear: [10,10,10]
+      activeJoints: ["L_SHOULDER_P",
+                    "L_SHOULDER_R",
+                    "L_SHOULDER_Y",
+                    "L_ELBOW_P",
+                    "L_ELBOW_Y",
+                    "L_WRIST_R",
+                    "L_WRIST_Y",
+                    "L_HAND"]
+    
+  RightForceDisplay:
+    base: LeftForceDisplay
+    receiver_name: LeftForceDisplay
+    task:
+      frame: RightHandWrench
+      activeJoints: ["R_SHOULDER_P",
+                    "R_SHOULDER_R",
+                    "R_SHOULDER_Y",
+                    "R_ELBOW_P",
+                    "R_ELBOW_Y",
+                    "R_WRIST_R",
+                    "R_WRIST_Y",
+                    "R_HAND"]
+
+  ForceState:
+    base: Parallel
+    states:
+    - LeftForceDisplay
+    - RightForceDisplay

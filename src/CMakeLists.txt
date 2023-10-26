@@ -19,13 +19,24 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control mc_rtc::mc_rtc_r
 target_link_libraries(${PROJECT_NAME} PUBLIC mc_tasks_biRobotTeleop)
 # target_link_libraries(${PROJECT_NAME} PUBLIC biRobotTeleop)
 
-
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION "${MC_RTC_LIBDIR}"
-  LIBRARY DESTINATION "${MC_RTC_LIBDIR}"
-  RUNTIME DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR})
 
 add_controller(${PROJECT_NAME}_controller lib.cpp "")
+set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 target_link_libraries(${PROJECT_NAME}_controller PUBLIC ${PROJECT_NAME})
 
 add_subdirectory(states)
+
+message("HERE IS DIR ${CMAKE_INSTALL_PREFIX} ")
+
+install(TARGETS ${PROJECT_NAME}
+  EXPORT "${PROJECT_NAME}Config"
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
+
+install(EXPORT "${PROJECT_NAME}Config"
+        FILE "${PROJECT_NAME}Config.cmake"
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
+)

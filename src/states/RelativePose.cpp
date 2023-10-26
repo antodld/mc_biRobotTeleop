@@ -29,6 +29,7 @@ void RelativePose::start(mc_control::fsm::Controller & ctl_)
   task_->target(task_->frame().position());
 
   ctl_.solver().addTask(task_);
+  weight_ = task_->weight();
 
   createGUI(ctl_);
 
@@ -38,6 +39,8 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);  
   mc_rbdyn::Robot & robot = ctl.robots().robot(r_name_);
+
+  const sva::PTransformd & X_0_rPose = task_->frame().position();
 
   biRobotTeleop::HumanPose h;
   if(h_indx_ == 0)
@@ -51,12 +54,17 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   X_0_hRef_ = h.getPose(biRobotTeleop::Limbs::Pelvis);
   X_0_hTarget_ = h.getPose(humanTargetLimb_);
+  const sva::MotionVecd v_limb = h.getVel(humanTargetLimb_);
+  const sva::MotionVecd v_target = X_TargetHuman_TargetRobot_ * sva::PTransformd(X_0_hTarget_.rotation()) * v_limb ;
 
   const sva::PTransformd & X_0_RbtRef = robot.frame(robotRefFrame_).position();
 
   const sva::PTransformd X_0_taskTarget = ( (X_TargetHuman_TargetRobot_ *  X_0_hTarget_) * (( X_RefHuman_RefRobot_ * X_0_hRef_).inv()) ) *  X_0_RbtRef;
   
   task_->target(X_0_taskTarget);
+  task_->refVelB(v_target);
+
+  
 
   if( sva::rotationError(X_0_taskTarget.rotation(),task_->frame().position().rotation()).norm() < completion_eval_)
   {

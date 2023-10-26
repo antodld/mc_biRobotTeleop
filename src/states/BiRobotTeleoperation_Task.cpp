@@ -92,7 +92,7 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   // biTask_ = std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(),r1,r2);
   // biTask_->load(ctl.solver(),state_config_);
   // biTask_->updateHuman(hp_1,hp_2);
-  mc_rtc::log::info("[{}] creat datastore {}",name(),name()+"_tasks" );
+  mc_rtc::log::info("[{}] create datastore {}",name(),name()+"_tasks" );
   ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
 
   // ctl_.solver().addTask(biTask_);

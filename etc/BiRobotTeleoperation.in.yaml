@@ -72,6 +72,10 @@ states:
 
 @RobotTeleopTasks.yaml
 
+@ForcesDisplay.yaml
+
+@JointsDamping.yaml
+
   BiRobot::Teleop:
     base: Parallel
     states:
@@ -95,6 +99,11 @@ states:
     # - BiTeleop_Damping_2_Forearm
     # - BiTeleop_Damping_1_Arm
     # - BiTeleop_Damping_2_Arm
+    - JointsDamping_R1_Left
+    - JointsDamping_R2_Left
+    - JointsDamping_R1_Right
+    - JointsDamping_R2_Right
+    - HumanEstimation
   
   Teleop:
     base: Parallel
@@ -136,6 +145,10 @@ states:
 transitions:
 - [BiRobotTeleoperation_Initial, OK, PostureImitation, Strict]
 - [PostureImitation, OK, MainState, Auto]
+
+# transitions:
+# - [BiRobotTeleoperation_Initial, OK, HandsTask, Strict]
+# - [HandsTask, OK, ForceState, Auto]
 
 # Initial state
 init: BiRobotTeleoperation_Initial

@@ -36,6 +36,7 @@ struct RelativePose : mc_control::fsm::State
   biRobotTeleop::Limbs humanTargetLimb_;
   std::shared_ptr<mc_tasks::TransformTask> task_;
   double completion_eval_ = 0;
+  double weight_ = 0;
 
 
 };
