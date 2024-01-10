@@ -35,16 +35,7 @@ bool HandDamping::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
 
-  biRobotTeleop::HumanPose h;
-
-  if(h_indx_ == 0)
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
-  }
-  else
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
-  }
+  const biRobotTeleop::HumanPose & h = h_indx_ == 0 ? ctl.hp_1_ : ctl.hp_2_;
 
   sva::PTransformd X_frame0_frame = sva::PTransformd(task_->frame().position().rotation(),Eigen::Vector3d::Zero());
   task_->refVelB( X_frame0_frame * h.getVel(humanTargetLimb_) );

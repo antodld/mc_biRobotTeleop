@@ -5,6 +5,8 @@
 #include <mc_rtc/gui/Input.h>
 #include <mc_rtc/gui/Checkbox.h>
 #include <mc_tasks/TransformTask.h>
+#include "../BiRobotTeleoperation.h"
+
 
 struct HumanPoseEstimation : mc_control::fsm::State
 {

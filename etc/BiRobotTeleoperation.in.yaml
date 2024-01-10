@@ -62,6 +62,15 @@ human:
     right_forearm: "RForearmLink" 
     pelvis: "HipsLink" 
 
+local_controller:
+  human_name: human_1
+
+distant_controller:
+  ip: localhost
+  sub_port : 4242
+  pub_port: 4343
+  human_name: human_2
+
 states:
 
 @BiRobotTasks.yaml

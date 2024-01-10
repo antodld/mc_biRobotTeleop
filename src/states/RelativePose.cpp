@@ -42,15 +42,7 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   const sva::PTransformd & X_0_rPose = task_->frame().position();
 
-  biRobotTeleop::HumanPose h;
-  if(h_indx_ == 0)
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
-  }
-  else
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
-  }
+  const biRobotTeleop::HumanPose & h = ctl.getHumanPose(h_indx_);
 
   X_0_hRef_ = h.getPose(biRobotTeleop::Limbs::Pelvis);
   X_0_hTarget_ = h.getPose(humanTargetLimb_);

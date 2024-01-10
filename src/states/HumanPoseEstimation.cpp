@@ -15,7 +15,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
     dt_ = ctl.timeStep;
-    auto robots =  ctl.datastore().get<mc_rbdyn::RobotsPtr>("external_robots");
+    auto robots =  ctl.external_robots_;
     humanRobot_name_ = name() + "_human";
 
     mc_rbdyn::RobotModulePtr robot_ptr = mc_rbdyn::RobotLoader::get_robot_module("simple_human",humanRobot_name_);
@@ -31,18 +31,13 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
 
 bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
 {
-    auto ext_robots =  ctl_.datastore().get<mc_rbdyn::RobotsPtr>("external_robots");
+    auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
+    auto ext_robots =  ctl.external_robots_;
     mc_rbdyn::Robot & human = ext_robots.get()->robot(humanRobot_name_);
 
-    biRobotTeleop::HumanPose h;
-    if(human_indx_ == 0)
-    {
-        ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
-    }
-    else
-    {
-        ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
-    }
+    const biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+
+    h_estimated_.setOffset(h.getOffset());
 
     std::vector<double> dot_q_vec;
     for (auto & j : human.alpha())

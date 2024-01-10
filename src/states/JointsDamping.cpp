@@ -41,16 +41,7 @@ bool JointsDamping::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
 
-  biRobotTeleop::HumanPose h;
-
-  if(h_indx_ == 0)
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",h);
-  }
-  else
-  {
-    ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",h);
-  }
+  const biRobotTeleop::HumanPose & h = ctl.getHumanPose(h_indx_);
 
   const sva::MotionVecd vel = h.getVel(measured_limb_);
 

@@ -7,4 +7,13 @@ add_fsm_state_simple(ForceDisplay)
 add_fsm_state_simple(ChooseTransition)
 add_fsm_state_simple(HumanPoseEstimation)
 
+target_link_libraries(HumanPoseEstimation PUBLIC ${PROJECT_NAME})
+target_link_libraries(RelativePose PUBLIC ${PROJECT_NAME})
+target_link_libraries(JointsDamping PUBLIC ${PROJECT_NAME})
+target_link_libraries(HandDamping PUBLIC ${PROJECT_NAME})
+target_link_libraries(ForceDisplay PUBLIC ${PROJECT_NAME})
+target_link_libraries(BiRobotTeleoperation_Task PUBLIC ${PROJECT_NAME})
+target_link_libraries(BiRobotTeleoperation_Initial PUBLIC ${PROJECT_NAME})
+
+
 add_fsm_data_directory(data)

@@ -16,8 +16,8 @@ add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DBiRobotTeleoperation_EXPORTS")
 target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control_fsm)
 target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control mc_rtc::mc_rtc_ros)
-target_link_libraries(${PROJECT_NAME} PUBLIC mc_tasks_biRobotTeleop)
-# target_link_libraries(${PROJECT_NAME} PUBLIC biRobotTeleop)
+target_link_libraries(${PROJECT_NAME} PUBLIC biRobotTeleop::mc_tasks_biRobotTeleop)
+target_link_libraries(${PROJECT_NAME} PUBLIC biRobotTeleop::utils_biRobotTeleop)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR})
 

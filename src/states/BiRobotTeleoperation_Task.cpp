@@ -36,11 +36,8 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_1")("links",r1_linksName);
   state_config_("robot_2")("links",r2_linksName);
 
-  biRobotTeleop::HumanPose hp_1;
-  biRobotTeleop::HumanPose hp_2;
-
-  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",hp_1);
-  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",hp_2);
+  const biRobotTeleop::HumanPose & hp_1 = ctl.hp_1_;
+  const biRobotTeleop::HumanPose & hp_2 = ctl.hp_2_;
 
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
@@ -89,13 +86,9 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
 
   addToLogger(ctl_);
 
-  // biTask_ = std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(),r1,r2);
-  // biTask_->load(ctl.solver(),state_config_);
-  // biTask_->updateHuman(hp_1,hp_2);
   mc_rtc::log::info("[{}] create datastore {}",name(),name()+"_tasks" );
   ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
 
-  // ctl_.solver().addTask(biTask_);
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);
@@ -111,13 +104,10 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
 bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
 {
 
+  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);  
 
-
-  biRobotTeleop::HumanPose hp_1;
-  biRobotTeleop::HumanPose hp_2;
-
-  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_1",hp_1);
-  ctl_.datastore().get<biRobotTeleop::HumanPose>("human_2",hp_2);
+  const biRobotTeleop::HumanPose & hp_1 = ctl.getHumanPose(0);
+  const biRobotTeleop::HumanPose & hp_2 = ctl.getHumanPose(1);
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);

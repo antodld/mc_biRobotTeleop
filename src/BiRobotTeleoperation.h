@@ -9,6 +9,7 @@
 #include <mc_rtc_ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <mc_rbdyn/RobotLoader.h>
+#include <biRobotTeleop/HumanRobotDataReceiver.h>
 
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {
@@ -49,15 +50,30 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   }
 
-private:
-  
-  mc_rbdyn::RobotsPtr external_robots_ = nullptr;
-
   biRobotTeleop::HumanPose hp_1_;
   biRobotTeleop::HumanPose hp_2_;
+  mc_rbdyn::RobotsPtr external_robots_ = nullptr;
+
+  biRobotTeleop::HumanPose & getHumanPose(const int indx)
+  {
+   return (indx == 0) ? hp_1_ : hp_2_;
+  }
+
+private:
+  
+  biRobotTeleop::HumanRobotDataReceiver hp_rec;
+
+  //distant_controller_data
+  std::string ip_ = "localhost"; 
+  int sub_port_ = 4242;
+  int pub_port_ = 4343;
+  std::string distant_human_name_ = "human_1";
+
+  std::string local_human_name_ = "human_2";
 
   ros::Publisher sch_pub_;
   visualization_msgs::MarkerArray markers_;
+
 
 };
 

@@ -13,19 +13,31 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   // std::cout << config_("states").dump() << std::endl;
 
   external_robots_ = mc_rbdyn::Robots::make();
-
-  datastore().make<mc_rbdyn::RobotsPtr>("external_robots",external_robots_);
   
   mc_rbdyn::Robot & human_1 = robots().robot("human_1");
   mc_rbdyn::Robot & human_2 = robots().robot("human_2");
 
   updateHumanPose(human_1,hp_1_);
   updateHumanPose(human_2,hp_2_);
-  datastore().make<biRobotTeleop::HumanPose>("human_1",hp_1_);
-  datastore().make<biRobotTeleop::HumanPose>("human_2",hp_2_);
+
+  hp_1_ = biRobotTeleop::HumanPose("human_1");
+  hp_2_ = biRobotTeleop::HumanPose("human_2");
 
   auto n = mc_rtc::ROSBridge::get_node_handle();
   sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
+
+  hp_1_.addDataToGUI(*gui().get());
+  hp_2_.addDataToGUI(*gui().get());
+
+  config("distant_controller")("ip_",ip_);
+  config("distant_controller")("pub_port",pub_port_);
+  config("distant_controller")("sub_port",sub_port_);
+  config("distant_controller")("human_name",distant_human_name_);
+  config("local_controller")("human_name",local_human_name_);
+
+
+  hp_rec.init(distant_human_name_,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
+                        "tcp://" + ip_ + ":" + std::to_string(sub_port_));
 
   mc_rtc::log::success("BiRobotTeleoperation init done ");
 }
