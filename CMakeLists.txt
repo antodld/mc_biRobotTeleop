@@ -22,6 +22,8 @@ if(NOT TARGET mc_rtc::mc_control)
   find_package(mc_rtc REQUIRED)
 endif()
 
+find_package(biRobotTeleop REQUIRED)
+
 set(PACKAGE_EXTRA_MACROS "set(biRobotTeleoperation_STATES_LIBRARIES \"${MC_CONTROLLER_INSTALL_PREFIX}/biRobotTeleoperation/states\")
 set(biRobotTeleoperation_STATES_FILES \"\${biRobotTeleoperation_STATES_LIBRARIES}/data\")")
 
