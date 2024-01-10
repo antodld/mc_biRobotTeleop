@@ -41,7 +41,7 @@ void ForceDisplay::start(mc_control::fsm::Controller & ctl_)
   addLog(ctl_);
 
   task_->velFilterGain(0);
-  task_->UseFeedForwardAcceleration(false);
+  // task_->UseFeedForwardAcceleration(false);
 
 }
 

@@ -1,6 +1,6 @@
   RobotArm_1:
     base: RelativePose
-    robot_name: rhps1
+    robot_name: robot_1
     human_indx: 0
     human_targetLimb: LeftArm
     robot_refFrame: BODY
@@ -16,7 +16,7 @@
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
-      weight: 600
+      weight: 400
       stiffness: 200
 
   RobotArm_2:

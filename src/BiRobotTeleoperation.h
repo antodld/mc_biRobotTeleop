@@ -34,7 +34,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
   void updateHumanLink(const mc_rbdyn::Robot & human,const std::string & link ,biRobotTeleop::HumanPose & human_pose,const biRobotTeleop::Limbs human_link)
   {
     human_pose.setPose(human_link,human.bodyPosW(link));
-    sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() ); 
+    const sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() ); 
     human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link));
     human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link));
   }
@@ -46,34 +46,68 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     updateHumanLink(human,"RForearmLink",human_pose,biRobotTeleop::Limbs::RightForearm);
     updateHumanLink(human,"LArmLink",human_pose,biRobotTeleop::Limbs::LeftArm);
     updateHumanLink(human,"RArmLink",human_pose,biRobotTeleop::Limbs::RightArm);
-    updateHumanLink(human,"HipsLink",human_pose,biRobotTeleop::Limbs::Pelvis);
+    updateHumanLink(human,"TorsoLink",human_pose,biRobotTeleop::Limbs::Pelvis);
 
   }
 
+  void updateDistantHumanRobot();
+
   biRobotTeleop::HumanPose hp_1_;
   biRobotTeleop::HumanPose hp_2_;
+  biRobotTeleop::HumanPose hp_1_filtered_;
+  biRobotTeleop::HumanPose hp_2_filtered_;
   mc_rbdyn::RobotsPtr external_robots_ = nullptr;
+  biRobotTeleop::HumanRobotDataReceiver hp_rec_;
 
-  biRobotTeleop::HumanPose & getHumanPose(const int indx)
+  const int getDistantHumanIndx() const noexcept
   {
-   return (indx == 0) ? hp_1_ : hp_2_;
+    return distant_human_indx_;
+  }
+  const int getHumanIndx() const noexcept
+  {
+    return (distant_human_indx_ == 0) ? 1 : 0;
+  }
+
+  biRobotTeleop::HumanPose & getHumanPose(const int indx,const bool filtered = false)
+  {
+    if(!filtered)
+    {
+      return (indx == 0) ? hp_1_ : hp_2_;
+    }
+    return (indx == 0) ? hp_1_filtered_ : hp_2_filtered_;
+  }
+
+  const mc_rtc::Configuration & getGlobalConfig() const noexcept
+  {
+    return global_config_;
+  }
+
+  const bool useRos() const noexcept
+  {
+    return use_ros_;
   }
 
 private:
   
-  biRobotTeleop::HumanRobotDataReceiver hp_rec;
+  
 
   //distant_controller_data
   std::string ip_ = "localhost"; 
   int sub_port_ = 4242;
   int pub_port_ = 4343;
   std::string distant_human_name_ = "human_1";
-
+  std::string distant_robot_name_ = "robot_2";
+  int distant_human_indx_ = 0;
   std::string local_human_name_ = "human_2";
+
+  mc_rtc::Configuration global_config_;
 
   ros::Publisher sch_pub_;
   visualization_msgs::MarkerArray markers_;
 
+  bool useFilteredData_ = false;
+
+  bool use_ros_ = false;
 
 };
 

@@ -29,11 +29,24 @@ struct HumanPoseEstimation : mc_control::fsm::State
 
   void addMinAccTask(mc_rbdyn::Robot & human,const double weight = 1.);
 
+  void set_estimated_values(mc_rbdyn::Robot & human, const std::string & link, biRobotTeleop::Limbs limb)
+  {
+    const sva::PTransformd offset = h_estimated_.getOffset(limb);
+
+    h_estimated_.setPose(limb, offset.inv() * human.frame(link).position());
+    h_estimated_.setVel(limb, offset.inv() * human.bodyVelW(link));
+    h_estimated_.setVel(limb, offset.inv() 
+                        * sva::PTransformd(human.frame(link).position().rotation().transpose(),Eigen::Vector3d::Zero())
+                        *human.bodyAccB(link));
+  }
+
   Eigen::VectorXd solve();
 
   int human_indx_ = 0;
 
   int robot_indx_ = 0;
+
+  double stiffness_ = 100;
 
   double dt_ = 0.05;
   std::string humanRobot_name_;
@@ -43,5 +56,8 @@ struct HumanPoseEstimation : mc_control::fsm::State
   std::vector<Eigen::VectorXd> task_vec_;
   std::vector<double> task_weight_;
   Eigen::VectorXd dot_q_;
+
+  biRobotTeleop::HumanPose h_estimated_;
+
 
 };

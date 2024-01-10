@@ -23,7 +23,7 @@
           frame: RHandLink
           unactiveJoints: ["Root"]
           targetFrame:
-            robot: rhps1
+            robot: robot_1
             frame: L_SHOULDER_Y_LINK
             translation: [0.,0.1,0]
             controlPoints: [[0,0.8,0]]
@@ -59,6 +59,21 @@
           completion:
             eval: 0
 
-  HumanEstimation:
+  HumanEstimation_1:
     base: HumanPoseEstimation
     human_indx: 0
+    stiffness: 500
+
+  HumanEstimation_2:
+    base: HumanEstimation_1
+    human_indx: 1
+
+  HumanPoseData:
+    base: HumanPose
+    human_devices: ["RightArm"] #Devices names on human
+    robot_device: "Robot" #Device name attached to the robot
+    robot_link: "BODY" #Robot link on which the device is attached
+    link_sensor_transfo: #Transfo between sensor pose and link pose
+      rotation: [0,0,0]
+      translation: [0,0,0.5]
+

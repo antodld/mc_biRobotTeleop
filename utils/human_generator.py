@@ -6,7 +6,7 @@ import yaml
 class link_type(Enum):
     CYLINDER = 0
     BOX = 1
-    SPERE = 2
+    SPHERE = 2
 class link_param:
     def __init__(self,name,childs,shape) -> None:
         self.name :str = name #link name
@@ -16,7 +16,7 @@ class link_param:
             self.l = shape[0]
             self.r = shape[1]
         elif(len(shape) == 1):
-            self.type = link_type.SPERE
+            self.type = link_type.SPHERE
             self.r = shape[0]
         else:
             self.type = link_type.BOX
@@ -28,7 +28,7 @@ def update_link(param : link_param):
     if param.type == link_type.BOX:
         update_box_link(param)
         return
-    if param.type == link_type.SPERE:
+    if param.type == link_type.SPHERE:
         update_sphere_link(param)
         return
 

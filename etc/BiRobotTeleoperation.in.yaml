@@ -20,12 +20,15 @@ VerboseStateFactory: false
 robots:
   ground:
     module: env/ground
+  robot_1:
+    module: RHPS1
   robot_2:
     module: JVRC1
   human_1:
     module: human
   human_2:
     module: human
+
 # General constraints, always on
 constraints:
 - type: contact
@@ -62,14 +65,16 @@ human:
     right_forearm: "RForearmLink" 
     pelvis: "HipsLink" 
 
-local_controller:
-  human_name: human_1
-
-distant_controller:
-  ip: localhost
-  sub_port : 4242
-  pub_port: 4343
-  human_name: human_2
+OpenVRPlugin:
+  deviceMap: #[name ; ID]
+  - ["RightFoot","LHR-D756B287"]
+  - ["RightArm","LHR-9F12939E"]
+  - ["Robot","LHR-A108F2F9"]
+  sleep: 10 #ms
+  localData: false
+  distantData:
+    port: 12338
+    ip: 127.0.0.1
 
 states:
 
@@ -84,6 +89,23 @@ states:
 @ForcesDisplay.yaml
 
 @JointsDamping.yaml
+
+ 
+  Human::Trajectory:
+    base: Parallel
+    states: 
+      - HumanHandTrajTasks
+
+  Human::Free:
+    base: Parallel
+    states: 
+      - HumanHandTasks
+
+  Human:
+    base: Meta
+    transitions:
+      - [Human::Trajectory,OK,Human::Free,Auto]
+   
 
   BiRobot::Teleop:
     base: Parallel
@@ -107,34 +129,26 @@ states:
     # - BiTeleop_Damping_1_Forearm
     # - BiTeleop_Damping_2_Forearm
     # - BiTeleop_Damping_1_Arm
-    # - BiTeleop_Damping_2_Arm
+    # - BiTeleop_Damping_2_Arm    
     - JointsDamping_R1_Left
     - JointsDamping_R2_Left
     - JointsDamping_R1_Right
     - JointsDamping_R2_Right
-    - HumanEstimation
+    # - Forces
+
   
   Teleop:
     base: Parallel
     states:
     - Robot::Teleop
     - BiRobot::Teleop
-
-  Human::Trajectory:
-    base: Parallel
-    states: 
-    - HumanHandTrajTasks
-
-  Human::Free:
-    base: Parallel
-    states: 
-    - HumanHandTasks
+    - Human
   
-  Human:
+  Teleop::Sequence:
     base: Meta
     transitions:
-      - [Human::Trajectory,OK,Human::Free,Auto]
-  
+      - [PostureImitation,OK,Teleop,Strict]  
+
   PostureImitation:
     base: Parallel
     states:
@@ -148,12 +162,13 @@ states:
   MainState:
     base: Parallel
     states:
-    - Teleop
-    - Human
+    - HumanPoseData
+    - HumanPoseEstimation
+    - Teleop::Sequence
 
 transitions:
-- [BiRobotTeleoperation_Initial, OK, PostureImitation, Strict]
-- [PostureImitation, OK, MainState, Auto]
+- [BiRobotTeleoperation_Initial, OK, MainState, Strict]
+- [PostureImitation, OK, MainState, Strict]
 
 # transitions:
 # - [BiRobotTeleoperation_Initial, OK, HandsTask, Strict]
@@ -161,3 +176,6 @@ transitions:
 
 # Initial state
 init: BiRobotTeleoperation_Initial
+
+Plugins: [OpenVRPlugin,ROS]
+

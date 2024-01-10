@@ -7,13 +7,13 @@ tree:
 links:
 - name: TORSO_LINK
   child: ["HEAD_R_LINK","L_SHOULDER_R_LINK","R_SHOULDER_R_LINK"]
-  dimension: [0.1,0.3,0.4]
+  dimension: [0.1,0.3,0.35]
 - name: HEAD_LINK
   child: []
   dimension: [0.05]
 - name: L_ARM_LINK
   child: [L_FOREARM_LINK]
-  dimension: [0.2,0.025]
+  dimension: [0.2,0.05]
 - name: L_FOREARM_LINK
   child: [L_WRIST_R_LINK]
   dimension: [0.25,0.025]
@@ -22,7 +22,7 @@ links:
   dimension: [0.12,0.025]
 - name: R_ARM_LINK
   child: [R_FOREARM_LINK]
-  dimension: [0.2,0.025]
+  dimension: [0.2,0.05]
 - name: R_FOREARM_LINK
   child: [R_WRIST_R_LINK]
   dimension: [0.25,0.025]

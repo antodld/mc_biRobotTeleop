@@ -2,12 +2,14 @@
 #include <mc_joystick_plugin/joystick_inputs.h>
 #include <mc_rbdyn/RobotLoader.h>
 #include "../BiRobotTeleoperation.h"
+#include <mc_rtc/gui/Robot.h>
 
 void HumanPoseEstimation::configure(const mc_rtc::Configuration & config)
 {
 
   config_.load(config);
   config_("human_indx",human_indx_);
+  config_("stiffness",stiffness_);
 
 }
 
@@ -16,7 +18,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
     auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
     dt_ = ctl.timeStep;
     auto robots =  ctl.external_robots_;
-    humanRobot_name_ = name() + "_human";
+    humanRobot_name_ = "human_" + std::to_string(ctl.getHumanIndx()) + "_estimated";
 
     mc_rbdyn::RobotModulePtr robot_ptr = mc_rbdyn::RobotLoader::get_robot_module("simple_human",humanRobot_name_);
 
@@ -24,8 +26,20 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
     human.forwardKinematics();
     human.forwardVelocity();
     human.forwardAcceleration();
-
-    mc_rtc::ROSBridge::init_robot_publisher("human_estimation/" + name(),dt_,human);
+    ctl.gui()->addElement({"BiRobotTeleop","Estimated Human"},
+                            mc_rtc::gui::Robot(humanRobot_name_,
+                                [this,&ctl]() -> mc_rbdyn::Robot & {return ctl.external_robots_.get()->robot(humanRobot_name_);})
+                            );
+    human_indx_ = ctl.getHumanIndx();
+    
+ 
+    if( ctl.useRos() )
+    {
+        mc_rtc::ROSBridge::init_robot_publisher("human_estimation/human_" + std::to_string(human_indx_),dt_,human);
+    }
+        
+    
+    
 
 }
 
@@ -51,27 +65,26 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     task_mat_.clear();
     task_vec_.clear();
     task_weight_.clear();
-    h.getOffset(biRobotTeleop::Limbs::LeftHand);
     sva::PTransformd offset = h.getOffset(biRobotTeleop::Limbs::LeftHand);
     addTransformTask(human,"L_HAND_LINK", 
                     offset * h.getPose(biRobotTeleop::Limbs::LeftHand),
-                    offset * h.getVel(biRobotTeleop::Limbs::LeftHand));
+                    offset * h.getVel(biRobotTeleop::Limbs::LeftHand),stiffness_);
     offset = h.getOffset(biRobotTeleop::Limbs::RightHand);
     addTransformTask(human,"R_HAND_LINK", 
                     offset * h.getPose(biRobotTeleop::Limbs::RightHand),
-                    offset * h.getVel(biRobotTeleop::Limbs::RightHand));
+                    offset * h.getVel(biRobotTeleop::Limbs::RightHand),stiffness_);
     offset = h.getOffset(biRobotTeleop::Limbs::RightArm);
     addTransformTask(human,"R_ARM_LINK", 
                     offset * h.getPose(biRobotTeleop::Limbs::RightArm),
-                    offset * h.getVel(biRobotTeleop::Limbs::RightArm));
+                    offset * h.getVel(biRobotTeleop::Limbs::RightArm),stiffness_);
     offset = h.getOffset(biRobotTeleop::Limbs::LeftArm);
     addTransformTask(human,"L_ARM_LINK", 
                     offset * h.getPose(biRobotTeleop::Limbs::LeftArm),
-                    offset * h.getVel(biRobotTeleop::Limbs::LeftArm));
+                    offset * h.getVel(biRobotTeleop::Limbs::LeftArm),stiffness_);
     offset = h.getOffset(biRobotTeleop::Limbs::Pelvis);
     addTransformTask(human,"TORSO_LINK",
                     offset * h.getPose(biRobotTeleop::Limbs::Pelvis), 
-                    offset * h.getVel(biRobotTeleop::Limbs::Pelvis));
+                    offset * h.getVel(biRobotTeleop::Limbs::Pelvis),stiffness_,2);
     addPostureTask(human,1,1e-1);
     addMinAccTask(human,1e-1);
 
@@ -91,8 +104,16 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     human.forwardVelocity();
     human.forwardAcceleration();
 
-    mc_rtc::ROSBridge::update_robot_publisher("human_estimation/" + name(),dt_,human);
+    set_estimated_values(human,"L_HAND_LINK",biRobotTeleop::Limbs::LeftHand);
+    set_estimated_values(human,"R_HAND_LINK",biRobotTeleop::Limbs::RightHand);
+    set_estimated_values(human,"L_ARM_LINK",biRobotTeleop::Limbs::LeftArm);
+    set_estimated_values(human,"R_ARM_LINK",biRobotTeleop::Limbs::RightArm);
 
+    if( ctl.useRos() )
+    {
+        mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_),dt_,human);
+    }
+    
     output("True");
     return false;
  
@@ -109,6 +130,11 @@ void HumanPoseEstimation::addGUI(mc_control::fsm::Controller & ctl_)
 
 void HumanPoseEstimation::teardown(mc_control::fsm::Controller & ctl_)
 {
+    ctl_.datastore().remove("human_estimated_" + std::to_string(human_indx_ + 1));
+    auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
+    auto robots =  ctl.external_robots_;
+    const int indx = robots.get()->robotIndex(humanRobot_name_);
+    robots.get()->removeRobot(indx);
 
 }
 
