@@ -36,7 +36,8 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     human_pose.setPose(human_link,human.bodyPosW(link));
     const sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() ); 
     human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link));
-    human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link));
+    const sva::MotionVecd v = human_pose.getVel(human_link);
+    human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link) + sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
   }
   void updateHumanPose(const mc_rbdyn::Robot & human ,biRobotTeleop::HumanPose & human_pose)
   {

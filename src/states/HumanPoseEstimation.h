@@ -35,9 +35,13 @@ struct HumanPoseEstimation : mc_control::fsm::State
 
     h_estimated_.setPose(limb, offset.inv() * human.frame(link).position());
     h_estimated_.setVel(limb, offset.inv() * human.bodyVelW(link));
-    h_estimated_.setVel(limb, offset.inv() 
-                        * sva::PTransformd(human.frame(link).position().rotation().transpose(),Eigen::Vector3d::Zero())
-                        *human.bodyAccB(link));
+    const sva::MotionVecd v = h_estimated_.getVel(limb);
+    const sva::MotionVecd & acc_body = human.bodyAccB(link);
+    h_estimated_.setAcc(limb, 
+                        (offset.inv() *
+                        sva::PTransformd(human.frame(link).position().rotation().transpose(),Eigen::Vector3d::Zero()) *
+                        acc_body) +
+                        sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
   }
 
   Eigen::VectorXd solve();
