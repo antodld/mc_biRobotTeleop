@@ -6,54 +6,22 @@
               "L_SHOULDER_R",
               "L_SHOULDER_Y",
               "L_ELBOW_P",
-              "L_ELBOW_Y",
               "L_WRIST_R",
               "L_WRIST_Y",
-              "L_HAND"]
+              "L_WRIST_P"]
     task:
-      weight: 2000
-      name: RHPS-1_JointsD_Left
+      weight: 5000
+      name: R1_JointsD_Left
     measured_limb: LeftHand
     damping: 100
 
-  JointsDamping_R1_Right:
-    base: JointsDamping_R1_Left
-    joints: ["R_SHOULDER_P",
-              "R_SHOULDER_R",
-              "R_SHOULDER_Y",
-              "R_ELBOW_P",
-              "R_ELBOW_Y",
-              "R_WRIST_R",
-              "R_WRIST_Y",
-              "R_HAND"]
-    measured_limb: RightHand
-    task:
-      name: RHPS-1_JointsD_Right
-
-  JointsDamping_R2_Left:
+  JointsDamping_R2:
     base: JointsDamping_R1_Left
     human_indx: 1
     robot_name: robot_2
-    joints: ["L_SHOULDER_P",
-              "L_SHOULDER_R",
-              "L_SHOULDER_Y",
-              "L_ELBOW_P",
-              "L_ELBOW_Y",
-              "L_WRIST_R",
-              "L_WRIST_Y"]
     measured_limb: LeftHand
+    joints: [panda_joint1,panda_joint2,panda_joint3,panda_joint4,panda_joint5,panda_joint6,panda_joint7]
     task:
-      name: Robot-2_JointsD_Left
+      name: R2_JointsD_Left
 
-  JointsDamping_R2_Right:
-    base: JointsDamping_R2_Left
-    joints: ["R_SHOULDER_P",
-              "R_SHOULDER_R",
-              "R_SHOULDER_Y",
-              "R_ELBOW_P",
-              "R_ELBOW_Y",
-              "R_WRIST_R",
-              "R_WRIST_Y"]
-    measured_limb: RightHand
-    task:
-      name: Robot-2_JointsD_Right
+

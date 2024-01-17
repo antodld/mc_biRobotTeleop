@@ -16,45 +16,38 @@
       unactive_joints: ["Root","CHEST_P","CHEST_Y"]
       limb_map:
         left_hand: 
-          name: "l_wrist"
+          name: "L_WRIST_Y_LINK"
         right_hand: 
-          name: "r_wrist"
+          name: "R_WRIST_Y_LINK"
         left_arm: 
-          name: "L_ELBOW_P_LINK"
-        right_arm: 
-          name: "R_ELBOW_P_LINK"
-        left_forearm:
           name: "L_SHOULDER_Y_LINK"
+        right_arm: 
+          name: "R_SHOULDER_Y_LINK"
+        left_forearm:
+          name: "L_ELBOW_Y_LINK"
         right_forearm: 
-          name: "R_SHOULDER_Y_LINK"  
+          name: "R_ELBOW_Y_LINK"  
         pelvis:
-          name: "body" 
+          name: "BODY" 
     robot_2: 
       name: "robot_2"
       links: ["RightArm","RightForearm","RightHand"]
-      unactive_joints: []
+      unactive_joints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
       limb_map:
         left_hand:
-          name: "panda_link8"
-          convex: "convex_panda_link7"
+          name: "L_WRIST_Y_S"
         right_hand: 
-          name: "panda_link8"
-          convex: "convex_panda_link7"
+          name: "R_WRIST_Y_S"
         left_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
+          name: "L_SHOULDER_Y_S"
         right_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
+          name: "R_SHOULDER_Y_S"
         left_forearm:
-          name: "panda_link5"
-          convex: "convex_panda_link5"
+          name: "L_ELBOW_P_S"
         right_forearm:
-          name: "panda_link5" 
-          convex: "convex_panda_link5"
+          name: "R_ELBOW_P_S" 
         pelvis: 
-          name: "panda_link0" 
-          convex: "convex_panda_link0"
+          name: "WAIST_Y_S" 
     human:
       convex:
         arm:
@@ -104,44 +97,37 @@
         angular: [10,1,1]
         linear: [10,10,10]
     robot_1:
-      force_sensor_frames: ["LeftHand","RightHand"]
+      force_sensor_frames: ["LeftHandWrench","RightHandWrench"]
       limb_map:
         left_hand: 
-          name: "l_wrist"
+          name: "L_WRIST_Y_LINK"
         right_hand: 
-          name: "r_wrist"
+          name: "R_WRIST_Y_LINK"
         left_arm: 
-          name: "L_ELBOW_P_LINK"
-        right_arm: 
-          name: "R_ELBOW_P_LINK"
-        left_forearm:
           name: "L_SHOULDER_Y_LINK"
+        right_arm: 
+          name: "R_SHOULDER_Y_LINK"
+        left_forearm:
+          name: "L_ELBOW_Y_LINK"
         right_forearm: 
-          name: "R_SHOULDER_Y_LINK"  
+          name: "R_ELBOW_Y_LINK"  
         pelvis:
-          name: "body" 
+          name: "BODY" 
     robot_2: 
-      force_sensor_frames: ["panda_link8"]
+      force_sensor_frames: ["L_WRIST_Y_S","R_WRIST_Y_S"]
       limb_map:
         left_hand:
-          name: "panda_link8"
-          convex: "convex_panda_link7"
+          name: "L_WRIST_Y_S"
         right_hand: 
-          name: "panda_link8"
-          convex: "convex_panda_link7"
+          name: "R_WRIST_Y_S"
         left_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
+          name: "L_SHOULDER_Y_S"
         right_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
+          name: "R_SHOULDER_Y_S"
         left_forearm:
-          name: "panda_link5"
-          convex: "convex_panda_link5"
+          name: "L_ELBOW_P_S"
         right_forearm:
-          name: "panda_link5" 
-          convex: "convex_panda_link5"
+          name: "R_ELBOW_P_S" 
         pelvis: 
-          name: "panda_link0" 
-          convex: "convex_panda_link0"
+          name: "WAIST_Y_S" 
 

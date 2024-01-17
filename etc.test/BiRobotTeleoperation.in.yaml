@@ -21,14 +21,14 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4
+    module: RHPS1
   robot_2:
-    module: PandaDefault
+    module: JVRC1
   human_1:
     module: human
   human_2:
     module: human
-
+    
 # General constraints, always on
 constraints:
 - type: contact
@@ -44,6 +44,14 @@ contacts:
   r1Surface: LeftFoot
   r2Surface: AllGround
 - r2: ground
+  r1Surface: RightFoot
+  r2Surface: AllGround
+- r2: ground
+  r1: robot_2
+  r1Surface: LeftFoot
+  r2Surface: AllGround
+- r2: ground
+  r1: robot_2
   r1Surface: RightFoot
   r2Surface: AllGround
 
@@ -132,7 +140,7 @@ states:
     states:
     - Robot::Teleop
     - BiRobot::Teleop
-    - Human::Free
+    - Human
   
   Teleop::Sequence:
     base: Meta
