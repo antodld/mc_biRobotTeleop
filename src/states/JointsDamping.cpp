@@ -23,7 +23,12 @@ void JointsDamping::start(mc_control::fsm::Controller & ctl_)
  
   const mc_rbdyn::Robot & robot = ctl_.robots().robot(r_name_);
 
+  vel_filter_ = mc_filter::LowPass<sva::MotionVecd>(ctl.timeStep,0.3);
+  vel_filter_.reset(sva::MotionVecd::Zero());
+
   task_ = std::make_shared<mc_tasks::PostureTask>(ctl.solver(),robot.robotIndex());
+
+  task_->name(name() + "_task");
 
   if(stateConfig_.has("task"))
   {
@@ -35,6 +40,10 @@ void JointsDamping::start(mc_control::fsm::Controller & ctl_)
 
   ctl_.solver().addTask(task_);
 
+  ctl.logger().addLogEntry(name() + "_velocity",[this]() -> const sva::MotionVecd & {return vel_filter_.eval();});
+  ctl.logger().addLogEntry(name() + "damping active",[this]() -> const bool & {return damping_on_;});
+
+
 }
 
 bool JointsDamping::run(mc_control::fsm::Controller & ctl_)
@@ -45,13 +54,18 @@ bool JointsDamping::run(mc_control::fsm::Controller & ctl_)
 
   const sva::MotionVecd vel = h.getVel(measured_limb_);
 
-  if(vel.linear().norm() < 1e-2)
+  vel_filter_.update(vel);
+
+  if(vel_filter_.eval().vector().norm() < 1e-2 && !damping_on_)
   {
     task_->damping(damping_);
+    damping_on_ = true;
   }
-  else
+  else if (vel.vector().norm() >= 1e-2 && damping_on_)
   {
+    vel_filter_.reset(vel);
     task_->damping(0);
+    damping_on_ = false;
   }
 
 
