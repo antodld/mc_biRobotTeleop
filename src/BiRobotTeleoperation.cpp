@@ -121,16 +121,32 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
 
   mc_rbdyn::Robot & robot_2 = robots().robot("robot_2");
 
- 
+  
+  if(robot_2.module().name != "panda_default")
+  {
+    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0)) * alignFeet(robot(),"Foot",robot_2,"Foot") );
+  }
+  else
+  {
+    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
+  }
 
-  robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0)) * alignFeet(robot(),"Foot",robot_2,"Foot") );
 
   if(robots().hasRobot("human_1"))
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
-    human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., -0.3)) * alignFeet(robot_2,"Foot",human_1,"Sole") );
+    
     human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0)) * alignFeet(robot(),"Foot",human_2,"Sole") );
+
+    if(robot_2.module().name != "panda_default")
+    {
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., -0.3)) * alignFeet(robot_2,"Foot",human_1,"Sole") );
+    }
+    else
+    {
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
+    }
   }
   
 }
