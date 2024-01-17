@@ -227,6 +227,14 @@ Eigen::VectorXd HumanPoseEstimation::solve()
     {
         qdd += task_weight_[i] * G * task_mat_[i].transpose() * task_vec_[i];
     }
+    for(int i = 0 ; i < qdd.size() ; i++)
+    {
+        if (qdd(i) != qdd(i))
+        {
+            mc_rtc::log::warning("[{}] Estimation failed",name());
+            return Eigen::VectorXd::Zero(qdd.size());
+        }
+    }
     return qdd;
 }
 
