@@ -57,6 +57,18 @@ struct ForceTransmission : mc_control::fsm::State
 
   const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const std::string & frame) const;
 
+  /**
+   * @brief Get the contact location on the robot indx limb, it suppose contact exist
+   * 
+   * @param ctl_ 
+   * @param robot_indx 
+   * @param limb_robot 
+   * @param limb_human 
+   * @return Eigen::Vector3d 
+   */
+  Eigen::Vector3d getContactPose(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
+
+
   double getContactLimbDistance(mc_control::fsm::Controller & ctl_,const std::string & frame,const biRobotTeleop::Limbs limb) const;
 
   double dt_ = 5e-3;
@@ -107,10 +119,11 @@ struct ForceTransmission : mc_control::fsm::State
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_; //the threshold must be over a low pass filtered value of the force/sensor
   mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
 
-  std::string contact_limb_; //limb in contact with a robot link equipped of force sensors 
-  std::vector<std::string> force_sensor_frames_;
+  std::string contact_limb_ = "None"; //limb in contact with a robot link equipped of force sensors 
+  std::string robot_limb_ = "None"; //robot limb in contact 
+  std::vector<std::string> force_sensor_limbs_;
 
-  sva::ForceVecd measured_force_ = sva::ForceVecd::Zero(); //measured force in the link frame
+  sva::ForceVecd measured_force_ = sva::ForceVecd::Zero(); //measured force in the link frame unified according to robotPose offsets
 
   biRobotTeleop::RobotPose robotPose_;
 

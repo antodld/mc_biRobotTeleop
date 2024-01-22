@@ -51,6 +51,23 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   }
 
+  /**
+   * @brief Update the HumanPose object
+   * 
+   * @param h HumanPose Object entry data
+   * @param h_target  HumanPose object that will be updated
+   */
+  void updateHumanPose(const biRobotTeleop::HumanPose & h, biRobotTeleop::HumanPose & h_target)
+  {
+    for(int i = 0 ; i <= biRobotTeleop::RightArm ; i++)
+    {
+      const auto limb = static_cast<biRobotTeleop::Limbs>(i);
+      h_target.setPose(limb,h.getPose(limb));
+      h_target.setVel(limb,h.getVel(limb));
+      h_target.setAcc(limb,h.getAcc(limb));
+    }
+  }
+
   void updateDistantHumanRobot();
 
   biRobotTeleop::HumanPose hp_1_;

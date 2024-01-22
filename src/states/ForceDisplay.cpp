@@ -99,7 +99,7 @@ bool ForceDisplay::run(mc_control::fsm::Controller & ctl_)
     task_->dimWeight(Eigen::VectorXd::Zero(6));
   }
 
-  const sva::ForceVecd target_force = X_frameR_frame_.dualMul( getReceivedData<sva::ForceVecd>(received_force_));
+  const sva::ForceVecd target_force =  - X_frameR_frame_.dualMul(getReceivedData<sva::ForceVecd>(received_force_));
   updateEnergyState(e_r_out_,-target_force,vel_);
   updateEnergyWindow(e_r_out_,E_r_out_);
   

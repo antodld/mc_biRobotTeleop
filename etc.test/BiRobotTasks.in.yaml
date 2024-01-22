@@ -48,32 +48,6 @@
           name: "R_ELBOW_P_S" 
         pelvis: 
           name: "WAIST_Y_S" 
-    human:
-      convex:
-        arm:
-          radius: 0.05
-          length: 0.2
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
-        forearm:
-          radius: 0.03
-          length: 0.2   
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
-        hand:
-          radius: 0.06
-          length: 0.1 
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
 
   BiTeleopTask_2:
     base: BiTeleopTask_1

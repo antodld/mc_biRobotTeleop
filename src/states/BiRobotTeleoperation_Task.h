@@ -39,6 +39,8 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
   //Used to get the transfo for the softmax computation
   size_t indx_sotfM = 0;
 
+  bool useEstimatedHuman_ = false;
+
   //The weight is a linear interpolation clamped in the distance range between the weight range
   Eigen::Vector2d weightRange_ = {20,1000};
   Eigen::Vector2d weightDistanceRange_ = Eigen::Vector2d::Zero();

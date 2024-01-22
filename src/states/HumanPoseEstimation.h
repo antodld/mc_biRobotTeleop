@@ -62,6 +62,8 @@ struct HumanPoseEstimation : mc_control::fsm::State
   Eigen::VectorXd dot_q_;
 
   biRobotTeleop::HumanPose h_estimated_;
+  std::vector<biRobotTeleop::Limbs> target_limbs_;
+  biRobotTeleop::RobotPose humanRobot_links_;
 
 
 };

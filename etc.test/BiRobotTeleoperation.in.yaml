@@ -64,6 +64,62 @@ human:
     left_forearm: "LForearmLink"
     right_forearm: "RForearmLink" 
     pelvis: "HipsLink" 
+    
+#human_1 paramters
+human_1:
+  convex:
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+
+#human_2 paramters
+human_2:
+  convex:
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
 
 OpenVRPlugin:
   deviceMap: #[name ; ID]

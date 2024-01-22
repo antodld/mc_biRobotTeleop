@@ -10,6 +10,28 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   // std::cout << config_("states").dump() << std::endl;
   // std::cout << "//" << std::endl;
   // config_.load(mc_rtc::Configuration(BiRobotTask_CONFIG_PATH));
+
+  external_robots_ = mc_rbdyn::Robots::make();
+
+  hp_1_ = biRobotTeleop::HumanPose("human_1");
+  hp_2_ = biRobotTeleop::HumanPose("human_2");
+
+  hp_1_filtered_ = biRobotTeleop::HumanPose("human_1_filtered");
+  hp_2_filtered_ = biRobotTeleop::HumanPose("human_2_filtered");
+
+  if (config.has("human_1"))
+  {
+    hp_1_.setCvx(config("human_1")("convex"));
+    hp_1_filtered_.setCvx(config("human_1")("convex"));
+  }
+  if (config.has("human_2"))
+  {
+    hp_2_.setCvx(config("human_2")("convex"));
+    hp_2_filtered_.setCvx(config("human_2")("convex"));
+  }
+
+ 
+
   global_config_.load(config);
   if(global_config_.has("Plugins"))
   {   
@@ -22,17 +44,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
           sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
       }
   }
-  external_robots_ = mc_rbdyn::Robots::make();
-
-  hp_1_ = biRobotTeleop::HumanPose("human_1");
-  hp_2_ = biRobotTeleop::HumanPose("human_2");
-
-  hp_1_filtered_ = biRobotTeleop::HumanPose("human_1_filtered");
-  hp_2_filtered_ = biRobotTeleop::HumanPose("human_2_filtered");
-
   
-
-
   config("distant_controller")("ip_",ip_);
   config("distant_controller")("pub_port",pub_port_);
   config("distant_controller")("sub_port",sub_port_);
@@ -55,8 +67,23 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   hp_rec_.init(distant_human_name_, distant_robot_name_ ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
                         "tcp://" + ip_ + ":" + std::to_string(sub_port_));
 
+  hp_rec_.setSimulatedDelay(1);
+
   gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
   gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Distant Controller Online",[this]() -> bool {return hp_rec_.online() ;},[this](){}));
+
+  for (auto & f : robots().robot("robot_2").frames())
+  {
+    mc_rtc::log::info("panda frame {}",f);
+  }  
+  for (auto & c : robots().robot("robot_2").convexes())
+  {
+    mc_rtc::log::info("convex name {}",c.first);
+  }
+  for (auto & c : robots().robot("robot_1").convexes())
+  {
+    mc_rtc::log::info("robot_1 convex name {}",c.first);
+  }
 
   mc_rtc::log::success("BiRobotTeleoperation init done ");
 }
@@ -64,40 +91,32 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 bool BiRobotTeleoperation::run()
 {
   updateDistantHumanRobot();
-  if (datastore().has("BiTeleopTask_1_tasks"))
-  {
-    markers_.markers.clear();
-    std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>> tasks;
-    datastore().get<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>("BiTeleopTask_1_tasks",tasks);
 
-    auto hp = tasks[0]->getHumanPose();
-    hp_1_.setOffset(hp[0].getOffset()); hp_2_.setOffset(hp[1].getOffset());
+  if(robots().hasRobot("human_1"))
+  {
+    mc_rbdyn::Robot & human_1 = robots().robot("human_1");
+    mc_rbdyn::Robot & human_2 = robots().robot("human_2");
+    updateHumanPose(human_1,hp_1_);
+    updateHumanPose(human_2,hp_2_);
+  }
+
+  if(use_ros_)
+  {
     size_t id = 0;
+    markers_.markers.clear();
     for (int partInt = biRobotTeleop::Limbs::LeftHand ; partInt <= biRobotTeleop::Limbs::RightArm ; partInt++)
     {
         biRobotTeleop::Limbs part = static_cast<biRobotTeleop::Limbs>(partInt);
-        auto cvx_1 = hp[0].getConvex(part);
-        auto cvx_2 = hp[1].getConvex(part);
+        auto cvx_1 = hp_1_.getConvex(part);
+        auto cvx_2 = hp_2_.getConvex(part);
         markers_.markers.push_back(fromCylinder("control/env_1/ground","human_1_" + biRobotTeleop::limb2Str(part),id,cvx_1,sva::PTransformd::Identity()));
         markers_.markers.push_back(fromCylinder("control/env_1/ground","human_2_" + biRobotTeleop::limb2Str(part),id+1,cvx_2,sva::PTransformd::Identity()));
         id +=2;
     }
-  
-    if(robots().hasRobot("human_1"))
-    {
-      mc_rbdyn::Robot & human_1 = robots().robot("human_1");
-      mc_rbdyn::Robot & human_2 = robots().robot("human_2");
-      updateHumanPose(human_1,hp_1_);
-      updateHumanPose(human_2,hp_2_);
-    }
-
-    if(use_ros_){sch_pub_.publish(markers_);}
-  
+    
+    sch_pub_.publish(markers_);
+    
   }
-
-
-
-
 
   return mc_control::fsm::Controller::run();
 }

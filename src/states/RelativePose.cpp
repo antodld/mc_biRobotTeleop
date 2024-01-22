@@ -40,13 +40,11 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);  
   mc_rbdyn::Robot & robot = ctl.robots().robot(r_name_);
 
-  const sva::PTransformd & X_0_rPose = task_->frame().position();
-
   const biRobotTeleop::HumanPose & h = ctl.getHumanPose(h_indx_);
 
-  X_0_hRef_ = h.getPose(biRobotTeleop::Limbs::Pelvis);
-  X_0_hTarget_ = h.getPose(humanTargetLimb_);
-  const sva::MotionVecd v_limb = h.getVel(humanTargetLimb_);
+  X_0_hRef_ = h.getOffset(biRobotTeleop::Limbs::Pelvis) * h.getPose(biRobotTeleop::Limbs::Pelvis);
+  X_0_hTarget_ = h.getOffset(humanTargetLimb_) * h.getPose(humanTargetLimb_);
+  const sva::MotionVecd v_limb = h.getOffset(humanTargetLimb_) * h.getVel(humanTargetLimb_);
   const sva::MotionVecd v_target = X_TargetHuman_TargetRobot_ * sva::PTransformd(X_0_hTarget_.rotation()) * v_limb ;
 
   const sva::PTransformd & X_0_RbtRef = robot.frame(robotRefFrame_).position();

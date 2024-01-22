@@ -55,15 +55,102 @@ human:
     right_arm: "RArmLink"
     left_forearm: "LForearmLink"
     right_forearm: "RForearmLink" 
-    pelvis: "HipsLink" 
+    pelvis: "HipsLink"
+
+#human_1 paramters
+human_1:
+  convex:
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
+
+#human_2 paramters
+human_2:
+  convex:
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        # mc_human
+        left:
+          rotation: [1.57,0,0]
+        right:
+          rotation: [-1.57,0,0]
+        # left:
+        #   rotation: [-1.57,0,0]
+        # right:
+        #   rotation: [1.57,0,3.14]
 
 OpenVRPlugin:
   deviceMap: #[name ; ID]
-  - ["RightFoot","LHR-D756B287"]
-  - ["RightArm","LHR-9F12939E"]
-  - ["Robot","LHR-A108F2F9"]
+  # - ["RightFoot","LHR-D756B287"]
+  - ["LeftHand","LHR-9F12939E"]
+  # - ["Robot","LHB-6D59AC3B"]
+  - ["Robot","LHR-659508D3"]
   sleep: 10 #ms
-  localData: false
+  localData: true
   distantData:
     port: 12338
     ip: 127.0.0.1
@@ -102,16 +189,16 @@ states:
   BiRobot::Teleop:
     base: Parallel
     states:
-    - BiTeleopTask_1
+    # - BiTeleopTask_1
     - BiTeleopTask_2
   
   Robot::Teleop:
     base: Parallel
     states:
     - BiTeleop_RobotArm_1
-    - BiTeleop_RobotArm_2
+    # - BiTeleop_RobotArm_2
     - BiTeleop_RobotForearm_1
-    - BiTeleop_RobotForearm_2
+    # - BiTeleop_RobotForearm_2
     - BiTeleop_RobotHand_1
     - BiTeleop_RobotHand_2
     # - BiTeleop_Damping_1_Hand
@@ -143,9 +230,9 @@ states:
     base: Parallel
     states:
     - RobotArm_1
-    - RobotArm_2
+    # - RobotArm_2
     - RobotForearm_1
-    - RobotForearm_2
+    # - RobotForearm_2
     - RobotHand_1
     - RobotHand_2
   
@@ -153,7 +240,8 @@ states:
     base: Parallel
     states:
     - HumanPoseData
-    - HumanEstimation_1
+    # - HumanEstimation_1
+    # - HumanEstimation_2
     - Teleop::Sequence
 
 transitions:
@@ -167,5 +255,5 @@ transitions:
 # Initial state
 init: BiRobotTeleoperation_Initial
 
-Plugins: [OpenVRPlugin,ROS]
+Plugins: [ROS] # mc_human, ]
 

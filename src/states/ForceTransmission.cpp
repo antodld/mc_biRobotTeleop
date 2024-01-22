@@ -14,10 +14,7 @@ void ForceTransmission::configure(const mc_rtc::Configuration & config)
   config("integration_window",int_window_);
   config("activation_threshold",activation_threshold_);
   config("deactivation_threshold",deactivation_threshold_);
-  if(config_.has("frame_offset"))
-  {
-    config_("frame_offset",X_frameR_frame_);
-  }
+
 }
 
 void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
@@ -29,8 +26,8 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
 
   dt_ = ctl_.timeStep;
 
-  config_(robot_name)("force_sensor_frames",force_sensor_frames_);
-  for (int _ = 0 ; _ < force_sensor_frames_.size(); _++)
+  config_(robot_name)("force_sensor_limbs",force_sensor_limbs_);
+  for (int _ = 0 ; _ < force_sensor_limbs_.size(); _++)
   {
     activation_force_measurements_.push_back(mc_filter::LowPass<sva::ForceVecd>(dt_,1));
   }
@@ -47,12 +44,14 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   ctl.gui()->addElement({"BiRobotTeleop","ForceTransmission"},mc_rtc::gui::ArrayLabel("e_r_in",[this]() -> const Eigen::VectorXd {return e_r_in_;} ),
                                                               mc_rtc::gui::ArrayLabel("e_s_in",[this]() -> const Eigen::VectorXd {return e_s_in_;} ),
                                                               mc_rtc::gui::ArrayLabel("Measured Force",[this]() -> const Eigen::VectorXd {return measured_force_.vector();} ),
-                                                              mc_rtc::gui::Label("Contact Limb",[this]() -> const std::string & {return contact_limb_;} ));
+                                                              mc_rtc::gui::Label("Contact Limb",[this]() -> const std::string & {return contact_limb_;} ),
+                                                              mc_rtc::gui::Label("Robot Limb",[this]() -> const std::string & {return robot_limb_;} ));
 
   ctl.hp_rec_.subsbscribe("e_r_in",mc_rtc::gui::Elements::ArrayLabel,{"BiRobotTeleop","ForceTransmission"},"e_r_in");
   ctl.hp_rec_.subsbscribe("e_s_in",mc_rtc::gui::Elements::ArrayLabel,{"BiRobotTeleop","ForceTransmission"},"e_s_in");
   ctl.hp_rec_.subsbscribe("Measured Force",mc_rtc::gui::Elements::ArrayLabel,{"BiRobotTeleop","ForceTransmission"},"Measured Force");
   ctl.hp_rec_.subsbscribe("Contact Limb",mc_rtc::gui::Elements::Label,{"BiRobotTeleop","ForceTransmission"},"Contact Limb");
+  ctl.hp_rec_.subsbscribe("Robot Limb",mc_rtc::gui::Elements::Label,{"BiRobotTeleop","ForceTransmission"},"Robot Limb");
 
 
 }
@@ -60,27 +59,31 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
 bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
-  // std::cout << "frame name " << task_->frame().name() << std::endl;
-  // mc_rtc::log::info("[{}] vel lin\n{}",name(),vel.linear());
-  // mc_rtc::log::info("[{}] vel ang\n{}",name(),vel.angular());
+
   
-  std::string distant_contact_limb = "None";
+  std::string distant_contact_limb = "None"; //is also the human link that is locally force controlled by the robot
+  std::string distant_robot_limb = "None"; //The distant robot link that is force controlled it is the image of the local human 
   ctl.hp_rec_.getSubscribedData<std::string>(distant_contact_limb,"Contact Limb");
+  ctl.hp_rec_.getSubscribedData<std::string>(distant_robot_limb,"Robot Limb");
+
 
   if(!active_) //if not active, look if the force sensors measure a contact
   {
     int filter_indx = 0;
-    for (auto & f :force_sensor_frames_)
+    for (auto & l :force_sensor_limbs_)
     {
-      const auto w = ctl_.robot().frame(f).wrench();
+      const auto limb = biRobotTeleop::str2Limb(l);
+      const auto frame_name = robotPose_.getName(limb);
+      const auto w = ctl_.robot().frame(frame_name).wrench();
       activation_force_measurements_[filter_indx].update(w);
       if(activation_force_measurements_[filter_indx].eval().vector().norm() > activation_threshold_) 
       {
         //Once a force sensor is in contact, we set the limb in contact and activate the force task;
-        mc_rtc::log::info("[{}] force measured on frame {}, adding task",name(),f);
-        const auto contact_limb = getContactLimb(ctl,f);
+        mc_rtc::log::info("[{}] force measured on frame {}, adding task",name(),frame_name);
+        const auto contact_limb = getContactLimb(ctl,frame_name);
         contact_limb_ = biRobotTeleop::limb2Str(contact_limb);
-        task_= std::make_shared<mc_tasks::force::AdmittanceTask>(ctl.robot().frame(f));
+        robot_limb_ = limb;
+        task_= std::make_shared<mc_tasks::force::AdmittanceTask>(ctl.robot().frame(frame_name));
         task_->load(ctl.solver(),config_("task"));
         task_->velFilterGain(0);
         ctl.solver().addTask(task_);
@@ -93,9 +96,19 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
     if(distant_contact_limb != "None")
     {
       //The distant robot is applying force on the contact limb
+      robot_limb_ = distant_contact_limb;
+      biRobotTeleop::Limbs human_limb = biRobotTeleop::str2Limb(distant_robot_limb);
+      biRobotTeleop::Limbs robot_limb = biRobotTeleop::str2Limb(robot_limb_);
+
       mc_rtc::log::info("[{}] force measured on limb {}, adding corresponding task",name(),distant_contact_limb);
-      const std::string frame = robotPose_.getName(biRobotTeleop::str2Limb(distant_contact_limb));   
-      task_= std::make_shared<mc_tasks::force::AdmittanceTask>(ctl.robot().frame(frame));
+      const std::string frameName = robotPose_.getName( biRobotTeleop::str2Limb(robot_limb_));  
+      const auto contactPose = getContactPose(ctl_,robot_limb,human_limb);
+      const auto X_0_contactF = sva::PTransformd(ctl.robot().frame(frameName).position().rotation(),contactPose);
+      const auto X_f_contactF = X_0_contactF * ctl.robot().frame(frameName).position().inv();
+
+      auto & robot_frame = ctl.robot().makeFrame("contact_frame",ctl.robot().frame(frameName),X_f_contactF,false);
+
+      task_= std::make_shared<mc_tasks::force::AdmittanceTask>(robot_frame);
       task_->load(ctl.solver(),config_("task"));  
       task_->velFilterGain(0);
       ctl.solver().addTask(task_);
@@ -105,12 +118,20 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
 
   if(active_)
   {
+    auto & h = ctl.getHumanPose(ctl.getHumanIndx());
+
+
+    //R rotate the task frame to the unified frame ori
+    const Eigen::Matrix3d R_taskFrame_RobotLimb = robotPose_.getOffset( biRobotTeleop::str2Limb(robot_limb_)).rotation()* task_->frame().X_b_f().rotation().transpose();
+    const Eigen::Matrix3d R_taskFrame_HumanLimb = h.getPose(biRobotTeleop::str2Limb(distant_robot_limb)).rotation() 
+                                                  * task_->frame().position().rotation().transpose();
+    const Eigen::Matrix3d R_HumanLimb_RobotLimb = R_taskFrame_RobotLimb * R_taskFrame_HumanLimb.transpose();
+
 
     const sva::PTransformd X_0_frame = task_->frame().position();
     const sva::MotionVecd prev_vel = vel_;
-    vel_ = sva::PTransformd(X_0_frame.rotation(),Eigen::Vector3d::Zero()) * task_->frame().velocity();
+    vel_ = sva::PTransformd(R_taskFrame_RobotLimb) * sva::PTransformd(X_0_frame.rotation()) * task_->frame().velocity();
 
-    const sva::ForceVecd measured_force = task_->measuredWrench();
     
     if(active_force_measurement_ != nullptr)
     {
@@ -141,15 +162,25 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
         return done_;
     }
 
-    if(task_->frame().hasForceSensor()){measured_force_ = task_->frame().wrench();}
+    sva::ForceVecd measured_force_frame; //measured force in task frame;
+
+    if(task_->frame().hasForceSensor())
+    {
+      measured_force_frame = task_->frame().wrench();    
+    }
     else
     {
       //if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in the mbc at the fb
       const auto X_0_fb = ctl.robot().posW();
-      const auto X_0_frame = task_->frame().position();
-      measured_force_ = (X_0_frame * X_0_fb.inv()).dualMul(ctl.robot().mbc().force[0]);
+      const auto X_0_f = task_->frame().position();
+      const auto X_0_b = task_->frame().X_b_f().inv() * X_0_f;
+
+      measured_force_frame = (X_0_f * X_0_fb.inv()).dualMul(  ctl.robot().mbc().force[0] );
     
     }
+    measured_force_ = sva::PTransformd(R_taskFrame_RobotLimb).dualMul(measured_force_frame);
+
+
 
     Eigen::VectorXd received_force = Eigen::VectorXd::Zero(6);
     ctl.hp_rec_.getSubscribedData<Eigen::VectorXd>(received_force,"Measured Force");
@@ -195,17 +226,21 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
       task_->dimWeight(Eigen::VectorXd::Zero(6));
     }
 
-    const sva::ForceVecd target_force = X_frameR_frame_.dualMul( getReceivedData<sva::ForceVecd>(received_force_));
-    updateEnergyState(e_r_out_,-target_force,vel_);
+    //We target minus the measured force on the distant robot, locally, the distant robot coincide with the local human pose
+    //target force is expressed in task frame
+    const sva::ForceVecd target_force = sva::PTransformd(R_HumanLimb_RobotLimb).dualMul( (-getReceivedData<sva::ForceVecd>(received_force_)) );
+
+    //Energy is locally expressed in task frame
+    updateEnergyState(e_r_out_, -target_force,vel_);
     updateEnergyWindow(e_r_out_,E_r_out_);
     
-    updateEnergyState(e_s_out_,-measured_force,vel_);
+    updateEnergyState(e_s_out_,-measured_force_,vel_);
     updateEnergyWindow(e_s_out_,E_s_out_);
     
     updateEnergyState(e_r_in_,target_force,vel_);
     updateEnergyWindow(e_r_in_,E_r_in_);
     
-    updateEnergyState(e_s_in_,measured_force,vel_);
+    updateEnergyState(e_s_in_,measured_force_,vel_);
     updateEnergyWindow(e_s_in_,E_s_in_);
 
 
@@ -213,8 +248,8 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
     updateEnergyWindow(e_d_,E_d_);
 
 
-    e_obs_ = getReceivedData<Eigen::Vector6d>(received_e_r_in_) 
-              + getReceivedData<Eigen::Vector6d>(received_e_s_in_) 
+    e_obs_ =    sva::PTransformd(R_HumanLimb_RobotLimb).matrix() * getReceivedData<Eigen::Vector6d>(received_e_r_in_) 
+              + sva::PTransformd(R_HumanLimb_RobotLimb).matrix() * getReceivedData<Eigen::Vector6d>(received_e_s_in_) 
               + E_d_.back() - E_d_.front() 
               - (E_s_out_.back() - E_s_out_.front()) 
               - (E_r_out_.back() - E_r_out_.front());
@@ -230,7 +265,7 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
       }
     }  
     // mc_rtc::log::info("[{}], target force {}",name(),target_force.force().z());
-    task_->targetWrench( target_force + sva::ForceVecd(r_d_.cwiseProduct(vel_.vector())));
+    task_->targetWrench( sva::PTransformd(R_taskFrame_RobotLimb).transMul( (target_force + sva::ForceVecd(r_d_.cwiseProduct(vel_.vector())))) );
     task_->targetPose(X_0_frame);
     count++;
   
@@ -295,6 +330,29 @@ double ForceTransmission::getContactLimbDistance(mc_control::fsm::Controller & c
   pair_limb_frame.getClosestPoints(p1,p2);
 
   return (p1 - p2).norm();
+
+}
+
+Eigen::Vector3d ForceTransmission::getContactPose(mc_control::fsm::Controller & ctl_,
+                                                       const biRobotTeleop::Limbs limb_robot,
+                                                       const biRobotTeleop::Limbs limb_human)
+{
+  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  auto & robot = ctl.robots().robot();
+
+  const auto h = ctl.getHumanPose(ctl.getDistantHumanIndx());
+
+  auto human_cvx = h.getConvex(limb_human);
+  auto robot_cvx = robot.convex(robotPose_.getConvexName(limb_robot));
+
+  sch::CD_Pair pair_limb_frame(&human_cvx,robot_cvx.second.get());
+
+  sch::Point3 p1, p2;
+  pair_limb_frame.getClosestPoints(p1,p2);
+
+  Eigen::Vector3d out;
+  out << p2[0],p2[1],p2[2];
+  return out;
 
 }
 

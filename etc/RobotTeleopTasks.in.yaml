@@ -10,7 +10,7 @@
       rotation: [0.,0.,0.]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
-      rotation: [1.57,0.,0.]
+      rotation: [0,0.,0.]
     task:
       type: transform
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
@@ -30,11 +30,11 @@
       rotation: [0.,0.,0.]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
-      rotation: [-1.57,0.,0.]
+      rotation: [-1.54,0.,0.]
     task:
       unactiveJoints: []
       frame: panda_link4
-      dimWeight: [1,1,1,0,0,0]   
+      dimWeight: [1,1,1,1,1,1]   
     
   RobotForearm_1:
     base: RobotArm_1

@@ -62,18 +62,21 @@
   HumanEstimation_1:
     base: HumanPoseEstimation
     human_indx: 0
+    target_limbs: ["LeftHand","RightHand","RightArm","LeftArm"]
     stiffness: 500
 
   HumanEstimation_2:
     base: HumanEstimation_1
+    target_limbs: ["LeftHand","RightHand"]
     human_indx: 1
 
   HumanPoseData:
     base: HumanPose
-    human_devices: ["RightArm"] #Devices names on human
+    human_indx : 1
+    human_devices: [["LeftHand","LeftHand"]] #Devices names on human [device, limb]
     robot_device: "Robot" #Device name attached to the robot
-    robot_link: "BODY" #Robot link on which the device is attached
-    link_sensor_transfo: #Transfo between sensor pose and link pose
-      rotation: [0,0,0]
-      translation: [0,0,0.5]
+    robot_link: "body" #Robot link on which the device is attached
+    link_sensor_transfo: #Transfo from link frame to sensor frame
+      rotation: [1.57,0,-1.57]
+      translation: [0,0,0]
 

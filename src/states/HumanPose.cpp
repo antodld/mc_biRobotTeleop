@@ -25,10 +25,18 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
 
     if(!human_sim_)
     {
-        config_("human_devices",human_devices_);
+        std::vector<std::vector<std::string>> map;
+        config_("human_devices",map);
+        for (auto & limb : map )
+        {
+            human_deviceTolimbs_[limb[0]] = biRobotTeleop::str2Limb(limb[1]);
+            mc_rtc::log::info("[{}] limb {} mapped to device {}",name(),limb[1],limb[0]);
+        }
+
         config_("robot_device",robot_device_);
         config_("robot_link",robot_link_);
         config_("link_sensor_transfo",X_link_sensor_);
+        
     }
     else
     {
@@ -36,13 +44,39 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                                               "tcp://" + ip_ + ":" + std::to_string(sub_port_));
         human_sim_rec_.setSimulatedDelay(0);
     }
+    if(config_.has("human_indx"))
+    {
+        config_("human_indx",human_indx_);
+    }
+    robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
+    mc_rtc::log::info("[{}] human is human_{}",name(),human_indx_ + 1);
+
+    auto & gui = *ctl.gui();
+    gui.addElement(this, {"States",name(), "Robot sensor offset"},
+
+                    mc_rtc::gui::ArrayInput(
+                        "translation [m]", {"x", "y", "z"},
+                        [this]() -> const Eigen::Vector3d & { return X_link_sensor_.translation(); },
+                        [this](const Eigen::Vector3d & t) { X_link_sensor_.translation() = t; }),
+                    mc_rtc::gui::ArrayInput(
+                        "rotation [deg]", {"r", "p", "y"},
+                        [this]() -> Eigen::Vector3d {
+                        return mc_rbdyn::rpyFromMat(X_link_sensor_.rotation()) * 180. / mc_rtc::constants::PI;
+                        },
+                        [this](const Eigen::Vector3d & rpy) {
+                        X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.);
+                        }));
+
+
 }
 
 bool HumanPose::run(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
 
-    biRobotTeleop::HumanPose & h = ctl.getHumanPose(ctl.getHumanIndx());
+
+    biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+    mc_rbdyn::Robot & robot = ctl.robots().robot(robot_name_);
 
     if(ctl.robots().hasRobot("human_1"))
     {   
@@ -61,18 +95,18 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         ctl.datastore().get<std::function<sva::MotionVecd(std::string)>>(
             "OpenVRPlugin::getVelocityByName");
 
-        //0t means world frame of tracker
-        const sva::PTransformd X_0t_robotTracker = tracker_pose_func(robot_device_);
+        const sva::PTransformd X_0_robotTracker = tracker_pose_func(robot_device_);
 
-        const sva::PTransformd X_0t_0 = (ctl.robot().bodyPosW(robot_link_).inv() * X_link_sensor_.inv() * X_0t_robotTracker);
+        const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
 
 
-        for (auto & device: human_devices_)
+        for (auto & device: human_deviceTolimbs_)
         {
-            const sva::PTransformd X_0_tracker = (X_0t_0 * tracker_pose_func(device).inv()).inv() ;
-            const sva::MotionVecd v_tracker = sva::PTransformd(X_0t_0.rotation()) * tracker_vel_func(device);
-            const biRobotTeleop::Limbs limb = biRobotTeleop::str2Limb(device);
-            h.setPose(limb,X_0_tracker);
+            const sva::PTransformd X_0_tracker =  tracker_pose_func(device.first) ;
+            const auto X_robotTracker_tracker = X_0_tracker * X_0_robotTracker.inv();
+            const sva::MotionVecd v_tracker = sva::PTransformd( h.getOffset(device.second).rotation() ) * tracker_vel_func(device.first);
+            const biRobotTeleop::Limbs limb = device.second;
+            h.setPose(limb,X_robotTracker_tracker * X_link_sensor_ * X_0_RobotLink);
             h.setVel(limb,v_tracker);
             
         }

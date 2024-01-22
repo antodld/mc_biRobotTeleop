@@ -22,10 +22,12 @@ struct HumanPose : mc_control::fsm::State
 
   void addLog(mc_control::fsm::Controller & ctl);
 
-  std::vector<std::string> human_devices_; //Devices names on human
+  std::map<std::string,biRobotTeleop::Limbs> human_deviceTolimbs_; //Map linking devices names to human limb attached
   std::string robot_device_; //Device name attached to the robot
   std::string robot_link_; //Robot link on which the device is attached
   sva::PTransformd X_link_sensor_; //Transfo between sensor pose and link pose
+  sva::PTransformd offset_global; 
+
 
   bool human_sim_ = false;
   biRobotTeleop::HumanRobotDataReceiver human_sim_rec_;
@@ -33,6 +35,9 @@ struct HumanPose : mc_control::fsm::State
   std::string ip_ = "localhost"; 
   int sub_port_ = 4242;
   int pub_port_ = 4343;
+
+  int human_indx_ = 0;
+  std::string robot_name_ = "";
   
 
 };

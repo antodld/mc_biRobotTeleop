@@ -20,13 +20,13 @@
         right_hand: 
           name: "r_wrist"
         left_arm: 
-          name: "L_ELBOW_P_LINK"
-        right_arm: 
-          name: "R_ELBOW_P_LINK"
-        left_forearm:
           name: "L_SHOULDER_Y_LINK"
+        right_arm: 
+          name: "R_SHOULDER_Y_LINK"
+        left_forearm:
+          name: "L_ELBOW_P_LINK"
         right_forearm: 
-          name: "R_SHOULDER_Y_LINK"  
+          name: "R_ELBOW_P_LINK"  
         pelvis:
           name: "body" 
     robot_2: 
@@ -55,32 +55,6 @@
         pelvis: 
           name: "panda_link0" 
           convex: "convex_panda_link0"
-    human:
-      convex:
-        arm:
-          radius: 0.05
-          length: 0.2
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
-        forearm:
-          radius: 0.03
-          length: 0.2   
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
-        hand:
-          radius: 0.06
-          length: 0.1 
-          offset:
-            left:
-              rotation: [1.57,0,0]
-            right:
-              rotation: [-1.57,0,0]
 
   BiTeleopTask_2:
     base: BiTeleopTask_1

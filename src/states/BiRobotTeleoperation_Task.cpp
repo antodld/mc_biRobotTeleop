@@ -22,6 +22,10 @@ void BiRobotTeleoperation_Task::configure(const mc_rtc::Configuration & config)
   {
     state_config_("deltaDistGain",deltaDistGain_);
   }
+  if(state_config_.has("use_estimated_human"))
+  {
+    state_config_("use_estimated_human",useEstimatedHuman_);
+  }
 }
 
 void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
@@ -72,10 +76,28 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   const unsigned int r2 = ctl.robots().robot(r2_name_).robotIndex();
   const unsigned int r1 = ctl.robots().robot(r1_name_).robotIndex();
 
+  const auto & global_config = ctl.getGlobalConfig();
   for (size_t k = 0; k < r1_links_.size() ; k++)
   {
     std::shared_ptr<mc_tasks::biRobotTeleopTask> task = std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(),r1,r2,r1_links_[k],r2_links_[k]);
     task->load(ctl.solver(),state_config_);
+    if(global_config.has("human_1"))
+    {
+      if(global_config.has("human_2"))
+      {
+        task->updateHumanConfig(global_config("human_1")("convex"),global_config("human_2")("convex"));
+      }
+      else
+      {
+        task->updateHumanConfig(global_config("human_1")("convex"),global_config("human_1")("convex"));
+
+      }
+    }
+    else if(global_config.has("human_2"))
+    {
+      task->updateHumanConfig(global_config("human_2")("convex"),global_config("human_2")("convex"));
+    }
+
     auto name = task->name();
     task->name(name + "_" + std::to_string(k));
     task->updateHuman(hp_1,hp_2);
@@ -85,6 +107,8 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   }
 
   addToLogger(ctl_);
+
+  ctl.gui()->addElement({"States",name()},mc_rtc::gui::Checkbox("Use Estimated Human",[this]()->bool {return useEstimatedHuman_;},[this](){useEstimatedHuman_ = !useEstimatedHuman_;}));
 
   mc_rtc::log::info("[{}] create datastore {}",name(),name()+"_tasks" );
   ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
@@ -106,8 +130,8 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
 
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);  
 
-  const biRobotTeleop::HumanPose & hp_1 = ctl.getHumanPose(0);
-  const biRobotTeleop::HumanPose & hp_2 = ctl.getHumanPose(1);
+  const biRobotTeleop::HumanPose & hp_1 = ctl.getHumanPose(0,useEstimatedHuman_);
+  const biRobotTeleop::HumanPose & hp_2 = ctl.getHumanPose(1,useEstimatedHuman_);
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);
