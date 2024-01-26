@@ -221,5 +221,19 @@ transitions:
 # Initial state
 init: BiRobotTeleoperation_Initial
 
-Plugins: [ROS] # mc_human, ]
+UDPPlugin:
+  # Global configuration options for UDPPlugin
+  # These are the default values used by the plugin, they may be overriden at controller's level,
+  # See https://jrl-umi3218.github.io/mc_rtc/tutorials/usage/global-plugins.html for more details
+  robots:
+    robot_1:
+      #host: localhost
+      host: hrp4005c
+      port: 4444
+      ignoredJoints:
+        joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
+
+# Plugins: [ROS,UDPPlugin, OpenVRPlugin,mc_joystick_plugin]
+Plugins: [ROS,mc_joystick_plugin]
+# Plugins: [ROS,OpenVRPlugin,mc_joystick_plugin]
 
