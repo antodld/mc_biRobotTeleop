@@ -44,18 +44,19 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   X_0_hRef_ = h.getOffset(biRobotTeleop::Limbs::Pelvis) * h.getPose(biRobotTeleop::Limbs::Pelvis);
   X_0_hTarget_ = h.getOffset(humanTargetLimb_) * h.getPose(humanTargetLimb_);
+  const auto X_hRef_htarget = X_0_hTarget_* X_0_hRef_.inv();
   const sva::MotionVecd v_limb = h.getOffset(humanTargetLimb_) * h.getVel(humanTargetLimb_);
   const sva::MotionVecd v_target = X_TargetHuman_TargetRobot_ * sva::PTransformd(X_0_hTarget_.rotation()) * v_limb ;
 
   const sva::PTransformd & X_0_RbtRef = robot.frame(robotRefFrame_).position();
 
-  const sva::PTransformd X_0_taskTarget = ( (X_TargetHuman_TargetRobot_ *  X_0_hTarget_) * (( X_RefHuman_RefRobot_ * X_0_hRef_).inv()) ) *  X_0_RbtRef;
+
+  const sva::PTransformd X_0_taskTarget = X_TargetHuman_TargetRobot_ * X_hRef_htarget * X_RefHuman_RefRobot_.inv() * X_0_RbtRef;
   
   task_->target(X_0_taskTarget);
   task_->refVelB(v_target);
 
   
-
   if( sva::rotationError(X_0_taskTarget.rotation(),task_->frame().position().rotation()).norm() < completion_eval_)
   {
     return true;
