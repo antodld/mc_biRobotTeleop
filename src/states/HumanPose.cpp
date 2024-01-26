@@ -15,6 +15,16 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
     const auto & config = ctl.getGlobalConfig();
+
+    human_indx_ = ctl.getHumanIndx();
+    if(config_.has("human_indx"))
+    {
+        config_("human_indx",human_indx_);
+    }
+    robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
+    mc_rtc::log::info("[{}] human is human_{}",name(),human_indx_ + 1);
+
+
     if(config.has("human_sim"))
     {
         config("human_sim")("ip",ip_);
@@ -35,7 +45,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
 
         config_("robot_device",robot_device_);
         config_("robot_link",robot_link_);
-        config_("link_sensor_transfo",X_link_sensor_);
+        config_("link_sensor_transfo")(robot_name_,X_link_sensor_);
         
     }
     else
@@ -44,12 +54,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                                               "tcp://" + ip_ + ":" + std::to_string(sub_port_));
         human_sim_rec_.setSimulatedDelay(0);
     }
-    if(config_.has("human_indx"))
-    {
-        config_("human_indx",human_indx_);
-    }
-    robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
-    mc_rtc::log::info("[{}] human is human_{}",name(),human_indx_ + 1);
+
 
     auto & gui = *ctl.gui();
     gui.addElement(this, {"States",name(), "Robot sensor offset"},
@@ -66,6 +71,13 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                         [this](const Eigen::Vector3d & rpy) {
                         X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.);
                         }));
+    
+    gui.addElement({"States",name(), "Robot sensor offset"},mc_rtc::gui::Transform("Expected robot sensor pose",[this,&ctl_]() -> sva::PTransformd
+                                                                                    {
+                                                                                        mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
+                                                                                        const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
+                                                                                        return X_link_sensor_ * X_0_RobotLink;
+                                                                                    }));
 
 
 }
@@ -95,19 +107,36 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         ctl.datastore().get<std::function<sva::MotionVecd(std::string)>>(
             "OpenVRPlugin::getVelocityByName");
 
-        const sva::PTransformd X_0_robotTracker = tracker_pose_func(robot_device_);
+        auto & has_tracker_func =
+        ctl.datastore().get<std::function<bool(std::string)>>(
+            "OpenVRPlugin::deviceHasName");
+        
+        sva::PTransformd X_0_robotTracker = tracker_pose_func(robot_device_);
 
         const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
 
-
         for (auto & device: human_deviceTolimbs_)
         {
-            const sva::PTransformd X_0_tracker =  tracker_pose_func(device.first) ;
-            const auto X_robotTracker_tracker = X_0_tracker * X_0_robotTracker.inv();
-            const sva::MotionVecd v_tracker = sva::PTransformd( h.getOffset(device.second).rotation() ) * tracker_vel_func(device.first);
-            const biRobotTeleop::Limbs limb = device.second;
-            h.setPose(limb,X_robotTracker_tracker * X_link_sensor_ * X_0_RobotLink);
-            h.setVel(limb,v_tracker);
+            if(has_tracker_func(device.first))
+            {
+                const sva::PTransformd X_0_trackerRaw =  tracker_pose_func(device.first) ;
+                const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
+                const sva::PTransformd X_0_tracker = X_robotTracker_tracker * X_link_sensor_ * X_0_RobotLink;
+                const sva::MotionVecd v_tracker = sva::PTransformd( X_0_tracker.rotation() ).inv() * tracker_vel_func(device.first);
+                const biRobotTeleop::Limbs limb = device.second;
+
+                if(X_0_robotTracker != sva::PTransformd::Identity() && X_0_trackerRaw != sva::PTransformd::Identity() && X_0_robotTracker != sva::PTransformd::Identity())
+                {
+
+                    h.setPose(limb,X_0_tracker);
+                    h.setVel(limb,v_tracker);
+
+                }
+                else
+                {
+                    h.setVel(limb,sva::MotionVecd::Zero());
+                }
+            }
             
         }
     }

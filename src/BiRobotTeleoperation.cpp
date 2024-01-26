@@ -30,8 +30,6 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     hp_2_filtered_.setCvx(config("human_2")("convex"));
   }
 
- 
-
   global_config_.load(config);
   if(global_config_.has("Plugins"))
   {   
