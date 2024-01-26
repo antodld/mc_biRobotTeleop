@@ -46,7 +46,7 @@
           weight: 10
           unactiveJoints: ["Root"]
           completion:
-            eval: 0
+            eval: 1e-2
       Human_2_Right:
           type: transform
           name: Human_2_LeftHand

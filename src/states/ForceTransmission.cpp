@@ -270,9 +270,9 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
     count++;
   
   }
-  
+
   output("OK");
-  return done_;
+  return true;
 }
 
 void ForceTransmission::updateEnergyState(Eigen::Vector6d & energy,const sva::ForceVecd & force, const sva::MotionVecd vel)

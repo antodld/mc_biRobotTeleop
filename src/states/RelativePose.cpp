@@ -58,10 +58,11 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   if( sva::rotationError(X_0_taskTarget.rotation(),task_->frame().position().rotation()).norm() < completion_eval_)
   {
-    output("OK");
     return true;
   }
-  return false;
+  
+  output("OK");
+  return true;
 }
 
 void RelativePose::addLocalTransfoGUI(mc_control::fsm::Controller & ctl, const std::string & transfo_name, sva::PTransformd & transfo)

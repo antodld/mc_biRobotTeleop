@@ -1,6 +1,8 @@
 #include "BiRobotTeleoperation_Task.h"
 
 #include "../BiRobotTeleoperation.h"
+#include <mc_joystick_plugin/joystick_inputs.h>
+
 
 void BiRobotTeleoperation_Task::configure(const mc_rtc::Configuration & config)
 {
@@ -193,7 +195,7 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   ctl_.datastore().assign<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name() +"_tasks",biTasks_);
 
   output("OK");
-  return false;
+  return true;
 
 }
 

@@ -90,6 +90,12 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
 bool BiRobotTeleoperation::run()
 {
+
+  if(joystickButtonPressed(joystickButtonInputs::B))
+  {
+    hardEmergency();
+  }
+
   updateDistantHumanRobot();
 
   if(robots().hasRobot("human_1"))
@@ -132,6 +138,23 @@ void BiRobotTeleoperation::updateDistantHumanRobot()
     robot.mbc().alpha = hp_rec_.getRobot().mbc().alpha;
     robot.posW(hp_rec_.getRobot().posW());
   } 
+}
+
+bool BiRobotTeleoperation::joystickButtonPressed(const joystickButtonInputs input)
+{
+  bool joystick_online = false;
+
+  if(datastore().has("Joystick::connected"))
+  {
+    joystick_online = datastore().get<bool>("Joystick::connected");
+  }
+
+  if(joystick_online)
+  {
+    auto & button_func = datastore().get<std::function<bool(joystickButtonInputs)>>("Joystick::Button");
+    return  button_func(input);
+  }
+  return false;
 }
 
 void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_data)

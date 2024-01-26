@@ -105,20 +105,52 @@ states:
     base: Meta
     transitions:
       - [Human::Trajectory,OK,Human::Free,Auto]
-   
+
+  ChoiceMain:
+    base: ChooseTransition
+    category: []
+    actions:
+      Start Teleop: TELEOP
+      Go halfsit: HALFSIT
+    fix_robot: false
+    joystick_action: [["Y","HALFSIT"],["A","TELEOP"]] #[button,action]
+    robots: ["robot_1","robot_2"]
+    task:
+      weight: 00
+      stiffness: 20
+  
+  ChoiceTeleop:
+    base: ChooseTransition
+    category: []
+    actions:
+      Start Bi Robot Teleop: BI-ROBOT-TELEOP
+      Cancel: CANCEL
+    joystick_action: [["Y","CANCEL"],["A","BI-ROBOT-TELEOP"]]
+    fix_robot: false
+
+  ChoiceBiTeleop:
+    base: ChooseTransition
+    category: []
+    actions:
+      Cancel: CANCEL
+    joystick_action: [["Y","CANCEL"]]
 
   BiRobot::Teleop:
     base: Parallel
     states:
     # - BiTeleopTask_1
     - BiTeleopTask_2
+    # - Forces
+    - ChoiceBiTeleop
+    delays:
+      ChoiceBiTeleop: 0.5
   
   Robot::Teleop:
     base: Parallel
     states:
     - BiTeleop_RobotArm_1
     # - BiTeleop_RobotArm_2
-    - BiTeleop_RobotForearm_1
+    # - BiTeleop_RobotForearm_1
     # - BiTeleop_RobotForearm_2
     - BiTeleop_RobotHand_1
     - BiTeleop_RobotHand_2
@@ -132,20 +164,32 @@ states:
     # - JointsDamping_R2_Left
     # - JointsDamping_R1_Right
     # - JointsDamping_R2_Right
-    # - Forces
-
+    
   
-  Teleop:
-    base: Parallel
-    states:
-    - Robot::Teleop
-    - BiRobot::Teleop
-    - Human::Free
+  Teleop::Main:
+    base: Meta
+    ResetPostures: true
+    transitions:
+      - [ChoiceMain, HALFSIT, GoHalfSitting, Auto]
+      - [GoHalfSitting, OK, ChoiceMain, Auto]
+      - [ChoiceMain, TELEOP, Teleop::Sequence, Auto]
+      - [Teleop::Sequence,CANCEL,ChoiceMain,Auto]  
   
   Teleop::Sequence:
+    base: Parallel
+    states:
+      - Robot::Teleop
+      - Human::Free
+      - biTeleop::Sequence
+    delays:
+      biTeleop::Sequence: 0.5
+  
+  biTeleop::Sequence:
     base: Meta
     transitions:
-      - [PostureImitation,OK,Teleop,Strict]  
+      - [ChoiceTeleop, BI-ROBOT-TELEOP, BiRobot::Teleop, Auto]
+      - [BiRobot::Teleop, CANCEL, ChoiceTeleop, Auto]
+      - [BiRobot::Teleop, OK, ChoiceTeleop, Auto]
 
   PostureImitation:
     base: Parallel
@@ -160,13 +204,14 @@ states:
   MainState:
     base: Parallel
     states:
-    - HumanPoseData
-    # - HumanEstimation_1
-    # - HumanEstimation_2
-    - Teleop::Sequence
+    - HumanPoseData_human_2
+    - HumanPoseData_human_1
+    - HumanEstimation_1
+    - HumanEstimation_2
+    - Teleop::Main
 
 transitions:
-- [BiRobotTeleoperation_Initial, OK, MainState, Strict]
+- [BiRobotTeleoperation_Initial, OK, MainState, Auto]
 - [PostureImitation, OK, MainState, Strict]
 
 # transitions:

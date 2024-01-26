@@ -10,6 +10,9 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <mc_rbdyn/RobotLoader.h>
 #include <biRobotTeleop/HumanRobotDataReceiver.h>
+#include <mc_control/ControllerServer.h>
+#include <mc_rtc/gui.h>
+#include <mc_joystick_plugin/joystick_inputs.h>
 
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {
@@ -105,6 +108,13 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return use_ros_;
   }
 
+  bool joystickButtonPressed(const joystickButtonInputs input);
+
+  void hardEmergency() const
+  {
+    mc_rtc::log::error_and_throw<std::runtime_error>("Hard Emergency called");
+  }
+
 private:
   
   
@@ -126,6 +136,7 @@ private:
   bool useFilteredData_ = false;
 
   bool use_ros_ = false;
+
 
 };
 
