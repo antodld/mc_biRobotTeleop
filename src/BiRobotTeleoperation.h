@@ -50,7 +50,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     updateHumanLink(human,"RForearmLink",human_pose,biRobotTeleop::Limbs::RightForearm);
     updateHumanLink(human,"LArmLink",human_pose,biRobotTeleop::Limbs::LeftArm);
     updateHumanLink(human,"RArmLink",human_pose,biRobotTeleop::Limbs::RightArm);
-    updateHumanLink(human,"TorsoLink",human_pose,biRobotTeleop::Limbs::Pelvis);
+    updateHumanLink(human,"HipsLink",human_pose,biRobotTeleop::Limbs::Pelvis);
 
   }
 
@@ -84,6 +84,12 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
   {
     return distant_human_indx_;
   }
+
+  /**
+   * @brief Get the index of the human in front of the mainRobot of this controller 
+   * 
+   * @return const int 
+   */
   const int getHumanIndx() const noexcept
   {
     return (distant_human_indx_ == 0) ? 1 : 0;
