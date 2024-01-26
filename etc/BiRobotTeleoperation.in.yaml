@@ -41,8 +41,24 @@ constraints:
 # Collision constraint
 collisions:
 - type: collision
+  r1: robot_1
+  r2: robot_1
   useMinimal: true
-# Initial set of contacts
+- type: collision
+  r1: robot_2
+  r2: robot_2
+  useMinimal: true
+- type: collision
+  r1: ground
+  r2: robot_2
+  collisions:
+    - body1: ground
+      body2: panda_link8*
+      iDist: 0.02
+      sDist: 0.005
+      damping: 0
+
+
 contacts:
 - r2: ground
   r1Surface: LeftFoot
@@ -64,10 +80,13 @@ human:
 
 OpenVRPlugin:
   deviceMap: #[name ; ID]
-  # - ["RightFoot","LHR-D756B287"]
-  - ["LeftHand","LHR-9F12939E"]
-  # - ["Robot","LHB-6D59AC3B"]
-  - ["Robot","LHR-659508D3"]
+  - ["LeftArm_Panda",LHR-A9EEA216]
+  - ["RightHand_HRP4",LHR-A469DE6D]
+  - ["Pelvis_Panda",LHR-2741ADA8]
+  - ["Pelvis_HRP4","LHR-D756B287"]
+  - ["LeftHand_Panda","LHR-9F12939E"]
+  - ["Robot_HRP4","LHR-A108F2F9"]
+  - ["Robot_Panda","LHR-659508D3"]
   sleep: 10 #ms
   localData: true
   distantData:

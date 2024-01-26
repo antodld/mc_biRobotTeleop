@@ -1,7 +1,7 @@
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
-    stiffness: 300
+    stiffness: 30
     softMaxGain: 40
     deltaDistGain: 0
     weight: 500
@@ -37,9 +37,15 @@
         left_hand:
           name: "panda_link8"
           convex: "convex_panda_link7"
+          offset:
+            translation: [0,0,-0.05]
+            rotation: [1.57,0,3.14]
         right_hand: 
           name: "panda_link8"
           convex: "convex_panda_link7"
+          offset:
+            translation: [0,0,-0.05]
+            rotation: [1.57,0,3.14]
         left_arm:
           name: "panda_link6"
           convex: "convex_panda_link6"
@@ -59,6 +65,7 @@
   BiTeleopTask_2:
     base: BiTeleopTask_1
     name: biRobotTask_2
+    use_estimated_human: true
     arrow:
       color: [0,0,255,1]
     robot_1:

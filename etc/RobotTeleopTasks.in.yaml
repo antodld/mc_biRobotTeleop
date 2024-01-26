@@ -17,7 +17,7 @@
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 100
+      stiffness: 30
 
   RobotArm_2:
     base: RobotArm_1
@@ -27,10 +27,10 @@
     robot_refFrame: panda_link0
     human_robot_RefTransfo: 
       translation: [0.,0.,0.]
-      rotation: [0.,0.,0.]
+      rotation: [0.,0.,-1.57]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
-      rotation: [-1.54,0.,0.]
+      rotation: [1.57,0,3.14]
     task:
       unactiveJoints: []
       frame: panda_link4
@@ -52,7 +52,7 @@
     base: RobotArm_1
     human_targetLimb: LeftHand
     task:
-      frame: L_WRIST_Y_LINK
+      frame: l_wrist
 
   RobotHand_2:
     base: RobotArm_2
@@ -86,7 +86,7 @@
     base: BiTeleop_RobotArm_1
     human_targetLimb: LeftHand
     task:
-      frame: L_WRIST_Y_LINK
+      frame: l_wrist
   
   BiTeleop_RobotHand_2:
     base: BiTeleop_RobotArm_2
