@@ -50,7 +50,7 @@ void setMarkerPose(visualization_msgs::Marker & marker, const sva::PTransformd &
 visualization_msgs::Marker fromCylinder(const std::string & frame_id,
                                         const std::string & name,
                                         size_t id,
-                                        sch::S_Cylinder & cylinder,
+                                        const sch::S_Cylinder & cylinder,
                                         const sva::PTransformd & colTrans)
 {
   auto marker = initMarker(frame_id, name, id, visualization_msgs::Marker::CYLINDER);

@@ -234,6 +234,7 @@ void BiRobotTeleoperation_Task::teardown(mc_control::fsm::Controller & ctl_)
   posture_1->stiffness(5);
   posture_2->stiffness(5);
 
+  ctl.gui()->removeCategory({"States",name()});
   teardownLogger(ctl);
 
 }
