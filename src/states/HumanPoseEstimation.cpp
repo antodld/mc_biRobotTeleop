@@ -57,7 +57,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
     human.forwardKinematics();
     human.forwardVelocity();
     human.forwardAcceleration();
-    ctl.gui()->addElement({"BiRobotTeleop","Estimated Human"},
+    ctl.getGUIBuilder().addElement({"BiRobotTeleop","Estimated Human"},
                             mc_rtc::gui::Robot(humanRobot_name_,
                                 [this,&ctl]() -> mc_rbdyn::Robot & {return ctl.external_robots_.get()->robot(humanRobot_name_);})
                             );

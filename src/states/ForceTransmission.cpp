@@ -41,7 +41,7 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   addGUI(ctl_);
   addLog(ctl_);
 
-  ctl.gui()->addElement({"BiRobotTeleop","ForceTransmission"},mc_rtc::gui::ArrayLabel("e_r_in",[this]() -> const Eigen::VectorXd {return e_r_in_;} ),
+  ctl.getGUIBuilder().addElement({"BiRobotTeleop","ForceTransmission"},mc_rtc::gui::ArrayLabel("e_r_in",[this]() -> const Eigen::VectorXd {return e_r_in_;} ),
                                                               mc_rtc::gui::ArrayLabel("e_s_in",[this]() -> const Eigen::VectorXd {return e_s_in_;} ),
                                                               mc_rtc::gui::ArrayLabel("Measured Force",[this]() -> const Eigen::VectorXd {return measured_force_.vector();} ),
                                                               mc_rtc::gui::Label("Contact Limb",[this]() -> const std::string & {return contact_limb_;} ),

@@ -2,7 +2,7 @@
 #include "convexViz.h"
 #include "yaml_path.h"
 #include <mc_tasks/biRobotTeleopTask.h>
-#include <mc_rtc/gui/Robot.h>
+#include <mc_rtc/gui/RobotMsg.h>
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -44,8 +44,15 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
           sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
       }
   }
+
+  int server_pub_port = config("server")("sub_port");
+  int server_sub_port = config("server")("pub_port");
+  std::string server_ip = config("server")("ip");
+  server_.reset(new mc_control::ControllerServer(dt, dt, {"ipc:///tmp/hp_server_pub.ipc","tcp://"+ server_ip + ":" + std::to_string(server_pub_port)},
+                                                         {"ipc:///tmp/hp_server_rep.ipc","tcp://"+ server_ip + ":" + std::to_string(server_sub_port)})
+                                                         );
   
-  config("distant_controller")("ip_",ip_);
+  config("distant_controller")("ip",ip_);
   config("distant_controller")("pub_port",pub_port_);
   config("distant_controller")("sub_port",sub_port_);
   config("distant_controller")("human_name",distant_human_name_);
@@ -53,14 +60,19 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   if(distant_human_name_ == "human_2")
   {
-    hp_1_.addDataToGUI(*gui().get());
+    hp_1_.addDataToGUI(gui_builder_);
     distant_human_indx_ = 1;
   }  
   else
   {
-    hp_2_.addDataToGUI(*gui().get());
+    hp_2_.addDataToGUI(gui_builder_);
   }
 
+  hp_1_.addDataToGUI(*gui().get());
+  hp_2_.addDataToGUI(*gui().get());
+
+  hp_1_.addOffsetToGUI(*gui().get());
+  hp_2_.addOffsetToGUI(*gui().get());
 
   distant_robot_name_ = (robot().name() == "robot_1") ? "robot_2" : "robot_1";
 
@@ -69,8 +81,10 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   hp_rec_.setSimulatedDelay(1);
 
-  gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("robot",[this]() -> const mc_rbdyn::Robot & {return robot(); }));
   gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Distant Controller Online",[this]() -> bool {return hp_rec_.online() ;},[this](){}));
+  gui()->addElement({},mc_rtc::gui::Button("Emergency Stop : B",[this](){hardEmergency();}));
 
   for (auto & f : robots().robot("robot_2").frames())
   {
@@ -123,6 +137,8 @@ bool BiRobotTeleoperation::run()
     sch_pub_.publish(markers_);
     
   }
+
+  server_->publish(gui_builder_);
 
   return mc_control::fsm::Controller::run();
 }

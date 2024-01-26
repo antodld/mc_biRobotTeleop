@@ -103,6 +103,11 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return global_config_;
   }
 
+  mc_rtc::gui::StateBuilder & getGUIBuilder()
+  {
+    return gui_builder_;
+  }
+
   const bool useRos() const noexcept
   {
     return use_ros_;
@@ -117,6 +122,8 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
 private:
   
+  std::unique_ptr<mc_control::ControllerServer> server_;
+  mc_rtc::gui::StateBuilder gui_builder_;
   
 
   //distant_controller_data
