@@ -31,7 +31,7 @@ add_subdirectory(src)
 
 set(AROBASE "@")
 configure_file(etc/BiRobotTeleoperation.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml" @ONLY)
-foreach(FILE BiRobotTasks DampingTasks HumanTasks RobotTeleopTasks ForcesDisplay JointsDamping)
+foreach(FILE BiRobotTasks DampingTasks HumanTasks RobotTeleopTasks ForcesDisplay JointsDamping HalfSitting HumanMap mc_humanMap)
 
   configure_file(etc/${FILE}.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml" @ONLY)
   insert_content(${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml ${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml ${FILE}.yaml)

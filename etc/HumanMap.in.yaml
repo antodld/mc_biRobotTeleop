@@ -1,0 +1,62 @@
+#human_1 paramters
+human_1:
+  convex:
+    pelvis:
+      offset:
+        rotation: [0,1.57,1.57]
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        left:
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        left:
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        left:
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]
+
+#human_2 paramters
+human_2:
+  convex:
+    pelvis:
+      offset:
+        rotation: [0,1.57,1.57]
+    arm:
+      radius: 0.05
+      length: 0.2
+      offset:
+        left:
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]
+    forearm:
+      radius: 0.03
+      length: 0.2   
+      offset:
+        left:
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]
+    hand:
+      radius: 0.06
+      length: 0.1 
+      offset:
+        left:
+          translation: [-0.05,0.12,0.05]
+          rotation: [-1.57,0,0]
+        right:
+          rotation: [1.57,0,3.14]

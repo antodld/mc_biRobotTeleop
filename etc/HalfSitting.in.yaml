@@ -1,0 +1,31 @@
+  GoHalfSitting_1:
+    base: HalfSitting
+    robot: robot_1
+    eval: 0.1
+
+  GoHalfSitting_2:
+    base: HalfSitting
+    robot: robot_2
+    eval: 0.1
+  
+  GoHalfSitting:
+    base: Parallel
+    states:
+      - GoHalfSitting_1
+      - GoHalfSitting_2
+
+  # GoHalfSitting:
+  #   base: MetaTasks
+  #   tasks:
+  #     robot_1_halfsit:
+  #         type: posture
+  #         robot: robot_1
+  #         weight: 100
+  #         completion:
+  #           eval: 1e-4
+  #     robot_2_halfsit:
+  #         type: posture
+  #         robot: robot_2
+  #         weight: 100
+  #         completion:
+  #           eval: 1e-4
