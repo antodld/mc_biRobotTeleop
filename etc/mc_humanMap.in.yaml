@@ -24,7 +24,7 @@ human_1:
         right:
           rotation: [-1.57,0,0]
     hand:
-      radius: 0.06
+      radius: 0.03
       length: 0.1 
       offset:
         # mc_human
@@ -59,7 +59,7 @@ human_2:
         right:
           rotation: [-1.57,0,0]
     hand:
-      radius: 0.06
+      radius: 0.03
       length: 0.1 
       offset:
         # mc_human

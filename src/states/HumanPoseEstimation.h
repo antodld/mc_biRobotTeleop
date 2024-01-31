@@ -18,6 +18,8 @@ struct HumanPoseEstimation : mc_control::fsm::State
 
   void teardown(mc_control::fsm::Controller & ctl) override;
 
+  void runThread(mc_control::fsm::Controller & ctl_);
+
   void addGUI(mc_control::fsm::Controller & ctl);
 
   void addLog(mc_control::fsm::Controller & ctl);
@@ -61,9 +63,17 @@ struct HumanPoseEstimation : mc_control::fsm::State
   std::vector<double> task_weight_;
   Eigen::VectorXd dot_q_;
 
+  double solving_perf_ = 0;
+
+  bool run_ = true;
+  std::thread estimation_thread_;
+  biRobotTeleop::HumanPose h_measured_;
+  biRobotTeleop::HumanPose h_measured_thread_;
   biRobotTeleop::HumanPose h_estimated_;
   std::vector<biRobotTeleop::Limbs> target_limbs_;
   biRobotTeleop::RobotPose humanRobot_links_;
+  std::mutex mutex_copy_;
+
 
 
 };

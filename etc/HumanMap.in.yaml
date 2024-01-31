@@ -3,6 +3,7 @@ human_1:
   convex:
     pelvis:
       offset:
+        translation: [0,0.15,0]
         rotation: [0,1.57,1.57]
     arm:
       radius: 0.05
@@ -21,7 +22,7 @@ human_1:
         right:
           rotation: [1.57,0,3.14]
     hand:
-      radius: 0.06
+      radius: 0.03
       length: 0.1 
       offset:
         left:
@@ -32,9 +33,10 @@ human_1:
 #human_2 paramters
 human_2:
   convex:
-    pelvis:
+    pelvis: #pelvis back
       offset:
-        rotation: [0,1.57,1.57]
+        translation: [0,0.2,0.1]
+        rotation: [0,-1.57,-1.57]
     arm:
       radius: 0.05
       length: 0.2
@@ -52,7 +54,7 @@ human_2:
         right:
           rotation: [1.57,0,3.14]
     hand:
-      radius: 0.06
+      radius: 0.03
       length: 0.1 
       offset:
         left:

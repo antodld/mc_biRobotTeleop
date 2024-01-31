@@ -1,0 +1,21 @@
+  Stabilizer:
+    base: StabilizerStandingState
+    stiffness: 5
+    StabilizerConfig:
+      type: lipm_stabilizer
+      robot: robot_1
+      leftFootSurface: LeftFootCenter
+      rightFootSurface: RightFootCenter
+      enabled: true
+      contacts: [Left, Right]
+      Left:
+        # Keep the yaw intact, align roll/pitch with the (flat) ground
+        overwriteRotationRPY:
+          roll: 0
+          pitch: 0
+        height: 0
+      Right:
+        overwriteRotationRPY:
+          roll: 0
+          pitch: 0
+        height: 0

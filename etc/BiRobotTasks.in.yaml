@@ -1,7 +1,7 @@
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
-    stiffness: 30
+    stiffness: 9
     softMaxGain: 40
     deltaDistGain: 0
     weight: 500

@@ -61,6 +61,8 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
                             mc_rtc::gui::Robot(humanRobot_name_,
                                 [this,&ctl]() -> mc_rbdyn::Robot & {return ctl.external_robots_.get()->robot(humanRobot_name_);})
                             );
+    
+    ctl.gui()->addElement({"States",name()},mc_rtc::gui::Robot("estimated robot",[this,&ctl]()-> const mc_rbdyn::Robot & {return ctl.external_robots_.get()->robot(humanRobot_name_); }));
 
     
  
@@ -69,19 +71,46 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
         mc_rtc::ROSBridge::init_robot_publisher("human_estimation/human_" + std::to_string(human_indx_),dt_,human);
     }
         
+    addLog(ctl_);
     h_estimated_ = biRobotTeleop::HumanPose(name());
+    h_measured_ = biRobotTeleop::HumanPose(name() + "_measured");
+    h_measured_thread_ = biRobotTeleop::HumanPose(name() + "_measured_thread");
     
-    
+    estimation_thread_ = 
+    std::thread([this,&ctl_]()
+        {
+            while(run_)
+            {
+                runThread(ctl_);
+                std::this_thread::sleep_for(std::chrono::milliseconds( static_cast<int>(dt_ * 1e3)));
+            }
+
+        }
+        );
 
 }
 
 bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
 {
     auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
+    {
+        std::lock_guard<std::mutex> lk_copy_state(mutex_copy_);
+        ctl.updateHumanPose(ctl.getHumanPose(human_indx_),h_measured_);
+        h_measured_.setOffset(ctl.getHumanPose(human_indx_).getOffset());
+        ctl.updateHumanPose(h_estimated_,ctl.getHumanPose(human_indx_,true));
+    }
+
+    output("True");
+    return false;
+}
+
+void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
+{
+    auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
     auto ext_robots =  ctl.external_robots_;
     mc_rbdyn::Robot & human = ext_robots.get()->robot(humanRobot_name_);
 
-    const biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+    const biRobotTeleop::HumanPose & h = h_measured_thread_;
 
     h_estimated_.setOffset(h.getOffset());
 
@@ -128,29 +157,30 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     human.forwardKinematics();
     human.forwardVelocity();
     human.forwardAcceleration();
-
-    for(int i = 0 ; i <= biRobotTeleop::Limbs::RightArm ; i++ )
+    
     {
-        const auto limb = static_cast<biRobotTeleop::Limbs>(i);
-        const auto link = humanRobot_links_.getName(limb);
-        set_estimated_values(human,link,limb);
+        std::lock_guard<std::mutex> lk_copy_state(mutex_copy_);
+        ctl.updateHumanPose(h_measured_,h_measured_thread_);
+        h_measured_thread_.setOffset(h_measured_.getOffset());
+        for(int i = 0 ; i <= biRobotTeleop::Limbs::RightArm ; i++ )
+        {
+            const auto limb = static_cast<biRobotTeleop::Limbs>(i);
+            const auto link = humanRobot_links_.getName(limb);
+            set_estimated_values(human,link,limb);
 
+        }
     }
-
-    ctl.updateHumanPose(h_estimated_,ctl.getHumanPose(human_indx_,true));
 
     if( ctl.useRos() )
     {
         mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_),dt_,human);
     }
     
-    output("True");
-    return false;
- 
+    
 }
 void HumanPoseEstimation::addLog(mc_control::fsm::Controller & ctl_)
 {
-
+    ctl_.logger().addLogEntry("perf_" + name() + "_solver",[this]()-> const double {return solving_perf_;} );
 }
 
 void HumanPoseEstimation::addGUI(mc_control::fsm::Controller & ctl_)
@@ -160,7 +190,9 @@ void HumanPoseEstimation::addGUI(mc_control::fsm::Controller & ctl_)
 
 void HumanPoseEstimation::teardown(mc_control::fsm::Controller & ctl_)
 {
-    ctl_.datastore().remove("human_estimated_" + std::to_string(human_indx_ + 1));
+    run_ = false;
+    estimation_thread_.join();
+
     auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
     auto robots =  ctl.external_robots_;
     const int indx = robots.get()->robotIndex(humanRobot_name_);
@@ -232,6 +264,8 @@ void HumanPoseEstimation::addMinAccTask(mc_rbdyn::Robot & human,const double wei
 
 Eigen::VectorXd HumanPoseEstimation::solve()
 {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     if (task_mat_.size() == 0)
     {
         mc_rtc::log::critical("No tasks provided");
@@ -246,11 +280,15 @@ Eigen::VectorXd HumanPoseEstimation::solve()
         Ginv += task_mat_[i].transpose() * task_mat_[i] * task_weight_[i];
 
     }
+
     Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(Ginv);
+
+
     auto rank = lu_decomp.rank();
     if(rank != Ginv.cols())
     {
         mc_rtc::log::critical("[{}] Ginv non invertible",name());
+        return Eigen::VectorXd::Zero(qdd.size());
     }
     const Eigen::MatrixXd G = Ginv.inverse();
     for (size_t i = 0 ; i < task_mat_.size() ; i++)
@@ -265,6 +303,8 @@ Eigen::VectorXd HumanPoseEstimation::solve()
             return Eigen::VectorXd::Zero(qdd.size());
         }
     }
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    solving_perf_ = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
     return qdd;
 }
 

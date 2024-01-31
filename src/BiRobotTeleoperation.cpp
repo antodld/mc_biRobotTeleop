@@ -11,7 +11,14 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   // std::cout << "//" << std::endl;
   // config_.load(mc_rtc::Configuration(BiRobotTask_CONFIG_PATH));
 
+
   external_robots_ = mc_rbdyn::Robots::make();
+
+  // const auto robot_2_indx = robots().robot("robot_2").robotIndex();
+  // mc_solver::CollisionsConstraint robot_2_collision_cstr(robots(),robot_2_indx,robot_2_indx,dt); 
+  // robot_2_collision_cstr.addCollisions(solver(), robots().robot(robot_2_indx).module().commonSelfCollisions());
+
+  // solver().addConstraintSet(robot_2_collision_cstr);
 
   hp_1_ = biRobotTeleop::HumanPose("human_1");
   hp_2_ = biRobotTeleop::HumanPose("human_2");
@@ -43,6 +50,14 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
       }
   }
 
+  const std::string kinematics_intertial_datastoreFunc_name = "KinematicAnchorFrame::" + robot("robot_1").name();
+  if(!datastore().has(kinematics_intertial_datastoreFunc_name))
+  {
+    datastore().make_call(
+      kinematics_intertial_datastoreFunc_name, [this](const mc_rbdyn::Robot & robot)
+      {return sva::interpolate(robot.surfacePose("LeftFoot"), robot.surfacePose("RightFoot"), 0.5); });
+  }
+
   int server_pub_port = config("server")("sub_port");
   int server_sub_port = config("server")("pub_port");
   std::string server_ip = config("server")("ip");
@@ -68,6 +83,9 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   hp_1_.addDataToGUI(*gui().get());
   hp_2_.addDataToGUI(*gui().get());
+  
+  hp_1_filtered_.addDataToGUI(*gui().get());
+  hp_2_filtered_.addDataToGUI(*gui().get());
 
   hp_1_.addOffsetToGUI(*gui().get());
   hp_2_.addOffsetToGUI(*gui().get());
@@ -108,7 +126,10 @@ bool BiRobotTeleoperation::run()
     hardEmergency();
   }
 
-  updateDistantHumanRobot();
+  if(hp_rec_.online())
+  {  
+    updateDistantHumanRobot();
+  }
 
   if(robots().hasRobot("human_1"))
   {
@@ -178,15 +199,17 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   mc_control::fsm::Controller::reset(reset_data);
 
   mc_rbdyn::Robot & robot_2 = robots().robot("robot_2");
+  mc_rbdyn::Robot & robot_1 = robots().robot("robot_1");
 
   
   if(robot_2.module().name != "panda_default")
   {
-    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0)) * alignFeet(robot(),"Foot",robot_2,"Foot") );
+    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0)) * alignFeet(robot_1,"Foot",robot_2,"Foot") );
   }
   else
   {
-    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
+    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot_2.posW() );
+    // robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
   }
 
 
@@ -195,7 +218,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
     
-    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0)) * alignFeet(robot(),"Foot",human_2,"Sole") );
+    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0)) * alignFeet(robot_1,"Foot",human_2,"Sole") );
 
     if(robot_2.module().name != "panda_default")
     {
@@ -203,11 +226,13 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     }
     else
     {
-      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
+      // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
+      human_1.posW(sva::PTransformd(sva::RotZ(-M_PI_2), Eigen::Vector3d(0, 0.4, 0.15)) * robot_2.posW() );
     }
   }
   
 }
+
 
 sva::PTransformd alignFeet(const mc_rbdyn::Robot & robot_1,const std::string & surfaceSuffix_1, const mc_rbdyn::Robot & robot_2,const std::string & surfaceSuffix_2)
 {

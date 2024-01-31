@@ -101,7 +101,9 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     {
       return (indx == 0) ? hp_1_ : hp_2_;
     }
-    return (indx == 0) ? hp_1_filtered_ : hp_2_filtered_;
+    {
+      return (indx == 0) ? hp_1_filtered_ : hp_2_filtered_;
+    }
   }
 
   const mc_rtc::Configuration & getGlobalConfig() const noexcept

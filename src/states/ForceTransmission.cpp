@@ -118,7 +118,7 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
 
   if(active_)
   {
-    auto & h = ctl.getHumanPose(ctl.getHumanIndx());
+    const auto & h = ctl.getHumanPose(ctl.getHumanIndx());
 
 
     //R rotate the task frame to the unified frame ori

@@ -24,6 +24,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
     robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
     mc_rtc::log::info("[{}] human is human_{}",name(),human_indx_ + 1);
 
+    offline_threshold_ = config("offline_threshold",100);
 
     if(config.has("human_sim"))
     {
@@ -41,6 +42,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
         {
             human_deviceTolimbs_[limb[0]] = biRobotTeleop::str2Limb(limb[1]);
             mc_rtc::log::info("[{}] limb {} mapped to device {}",name(),limb[1],limb[0]);
+            online_data_count_[human_deviceTolimbs_[limb[0]]] = 0;
         }
 
         config_("robot_device",robot_device_);
@@ -100,24 +102,30 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     {
 
         auto & tracker_pose_func =
-        ctl.datastore().get<std::function<sva::PTransformd(std::string)>>(
+        ctl.datastore().get<std::function<sva::PTransformd(const std::string &)>>(
             "OpenVRPlugin::getPoseByName");
 
         auto & tracker_vel_func =
-        ctl.datastore().get<std::function<sva::MotionVecd(std::string)>>(
+        ctl.datastore().get<std::function<sva::MotionVecd(const std::string &)>>(
             "OpenVRPlugin::getVelocityByName");
 
         auto & has_tracker_func =
-        ctl.datastore().get<std::function<bool(std::string)>>(
+        ctl.datastore().get<std::function<bool(const std::string &)>>(
             "OpenVRPlugin::deviceHasName");
-        
-        sva::PTransformd X_0_robotTracker = tracker_pose_func(robot_device_);
+
+        auto & tracker_online_func =
+        ctl.datastore().get<std::function<bool(const std::string &)>>(
+            "OpenVRPlugin::deviceOnline");
+
+                
+        const sva::PTransformd X_0_robotTracker = (has_tracker_func(robot_device_) && tracker_online_func(robot_device_)) ? 
+                                                    tracker_pose_func(robot_device_) : sva::PTransformd::Identity();
 
         const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
 
         for (auto & device: human_deviceTolimbs_)
         {
-            if(has_tracker_func(device.first))
+            if(has_tracker_func(device.first) && tracker_online_func(device.first))
             {
                 const sva::PTransformd X_0_trackerRaw =  tracker_pose_func(device.first) ;
                 const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
@@ -125,16 +133,27 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
                 const sva::MotionVecd v_tracker = sva::PTransformd( X_0_tracker.rotation() ).inv() * tracker_vel_func(device.first);
                 const biRobotTeleop::Limbs limb = device.second;
 
-                if(X_0_robotTracker != sva::PTransformd::Identity() && X_0_trackerRaw != sva::PTransformd::Identity() && X_0_robotTracker != sva::PTransformd::Identity())
+                if( checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker) )
                 {
-
-                    h.setPose(limb,X_0_tracker);
-                    h.setVel(limb,v_tracker);
-
+                    // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}",name(),biRobotTeleop::limb2Str(limb),h.getPose(limb));
+                    // mc_rtc::log::info(checkNorm(h.getPose(limb)));
+                    h.setVel(limb,sva::MotionVecd::Zero());
+                    if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))
+                    {
+                        mc_rtc::log::warning("[{}] tracker on limb {} not received",name(),biRobotTeleop::limb2Str(limb));
+                        h.setLimbActiveState(limb,false);
+                    }
+                    else if (online_data_count_[limb] < offline_threshold_)
+                    {
+                        online_data_count_[limb] += 1;
+                    }
                 }
                 else
                 {
-                    h.setVel(limb,sva::MotionVecd::Zero());
+                    h.setPose(limb,X_0_tracker);
+                    h.setVel(limb,v_tracker);
+                    online_data_count_[limb] == 0;
+                    h.setLimbActiveState(limb,true);
                 }
             }
             

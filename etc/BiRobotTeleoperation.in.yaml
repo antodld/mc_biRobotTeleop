@@ -25,19 +25,23 @@ robots:
     module: HRP4
   robot_2:
     module: PandaDefault
-  human_1:
-    module: human
-  human_2:
-    module: human
+  # human_1:
+  #   module: human
+  # human_2:
+  #   module: human
 
-@mc_humanMap.yaml
-#HumanMap.yaml
+#mc_humanMap.yaml
+@HumanMap.yaml
 
 # General constraints, always on
 constraints:
 - type: contact
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
+- type: kinematics
+  damper: [0.1, 0.01, 0.5]
+- type: dynamics
+  robot: robot_2
 # Collision constraint
 collisions:
 - type: collision
@@ -58,14 +62,17 @@ collisions:
       sDist: 0.005
       damping: 0
 
-
 contacts:
 - r2: ground
+  r1: robot_1
   r1Surface: LeftFoot
   r2Surface: AllGround
 - r2: ground
+  r1: robot_1
   r1Surface: RightFoot
   r2Surface: AllGround
+
+@Observers.yaml
 
 human:
   limb_map:
@@ -77,14 +84,15 @@ human:
     right_forearm: "RForearmLink" 
     pelvis: "HipsLink"
 
-
 OpenVRPlugin:
   deviceMap: #[name ; ID]
-  - ["LeftArm_Panda",LHR-A9EEA216]
-  - ["RightHand_HRP4",LHR-A469DE6D]
-  - ["Pelvis_Panda",LHR-2741ADA8]
-  - ["Pelvis_HRP4","LHR-D756B287"]
-  - ["LeftHand_Panda","LHR-9F12939E"]
+  - ["LeftArm_human_1",LHR-A9EEA216]
+  - ["LeftHand_human_1","LHR-9F12939E"]
+  # - ["Pelvis_human_1",LHR-2741ADA8]
+  - ["Pelvis_human_1","LHR-66106DA7"]
+  - ["RightHand_human_2",LHR-A469DE6D]
+  # - ["Pelvis_human_2","LHR-D756B287"]
+  - ["Pelvis_human_2","LHR-E488461D"]
   - ["Robot_HRP4","LHR-A108F2F9"]
   - ["Robot_Panda","LHR-659508D3"]
   sleep: 10 #ms
@@ -109,7 +117,8 @@ states:
 
 @JointsDamping.yaml
 
- 
+@Stabilizer.yaml
+
   Human::Trajectory:
     base: Parallel
     states: 
@@ -183,8 +192,9 @@ states:
     # - JointsDamping_R2_Left
     # - JointsDamping_R1_Right
     # - JointsDamping_R2_Right
+    - PandaPosture
     
-  
+
   Teleop::Main:
     base: Meta
     ResetPostures: true
@@ -198,7 +208,7 @@ states:
     base: Parallel
     states:
       - Robot::Teleop
-      - Human::Free
+      # - Human::Free
       - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
@@ -227,6 +237,7 @@ states:
     - HumanPoseData_human_1
     - HumanEstimation_1
     - HumanEstimation_2
+    # - Stabilizer
     - Teleop::Main
 
 transitions:
@@ -253,6 +264,8 @@ UDPPlugin:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
 
 # Plugins: [ROS,UDPPlugin, OpenVRPlugin,mc_joystick_plugin]
-Plugins: [ROS,mc_joystick_plugin]
-# Plugins: [ROS,OpenVRPlugin,mc_joystick_plugin]
+# Plugins: [ROS,mc_joystick_plugin]
+Plugins: [ROS,OpenVRPlugin,mc_joystick_plugin]
+# Plugins: [ROS,OpenVRPlugin]
+
 

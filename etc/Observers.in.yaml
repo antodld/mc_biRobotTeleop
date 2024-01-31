@@ -1,0 +1,26 @@
+ObserverPipelines:
+  - name: ObserverPipeline_robot_1
+    gui: true
+    observers:
+      - type: Encoder
+        robot: robot_1
+        update_robot: robot_1
+      - type: Attitude
+        robot: robot_1
+        update_robot: robot_1
+        required: true
+        update: true
+      - type: KinematicInertial
+        robot: robot_1
+        update_robot: robot_1
+        update: true
+        config:
+          cutoff: 0.02
+          anchorFrame:
+            maxAnchorFrameDiscontinuity: 0.02
+  - name: ObserverPipeline_robot_2
+    gui: true
+    observers:
+      - type: Encoder
+        robot: robot_2
+        update_robot: robot_2

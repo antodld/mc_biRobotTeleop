@@ -17,7 +17,7 @@
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 30
+      stiffness: 15
 
   RobotArm_2:
     base: RobotArm_1
@@ -26,7 +26,7 @@
     human_targetLimb: RightArm
     robot_refFrame: panda_link0
     human_robot_RefTransfo: 
-      translation: [0.,0.,0.]
+      translation: [-0.15,0.,-0.4]
       rotation: [0.,0.,-1.57]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
@@ -36,38 +36,14 @@
       frame: panda_link4
       dimWeight: [1,1,1,1,1,1]   
     
-  RobotForearm_1:
-    base: RobotArm_1
-    human_targetLimb: LeftForearm
-    task:
-      frame: L_ELBOW_P_LINK
-
-  RobotForearm_2:
-    base: RobotArm_2
-    human_targetLimb: RightForearm
-    task:
-      frame: panda_link6
-
-  RobotHand_1:
-    base: RobotArm_1
-    human_targetLimb: LeftHand
-    task:
-      frame: l_wrist
-
-  RobotHand_2:
-    base: RobotArm_2
-    human_targetLimb: RightHand
-    task:
-      frame: panda_link8
-
   BiTeleop_RobotArm_1:
     base: RobotArm_1
-    completion_eval: 0
+    completion_eval: 1e4
 
   
   BiTeleop_RobotArm_2:
     base: RobotArm_2
-    completion_eval: 0
+    completion_eval: 1e4
 
     
   BiTeleop_RobotForearm_1:
@@ -93,3 +69,37 @@
     human_targetLimb: RightHand
     task:
       frame: panda_link8
+    
+  PandaPosture:
+    base: MetaTasks
+    tasks:
+      # PandaPosture:
+      #   type: posture
+      #   robot: robot_2
+      #   dimWeight: [0,1,0,0,0,0,0]
+      #   weight: 50
+      #   target: 
+      #     panda_joint1: [0]
+      #     panda_joint2: [1]
+      #     panda_joint3: [0]
+      #     panda_joint4: [0]
+      #     panda_joint5: [0]
+      #     panda_joint6: [0]
+      #     panda_joint7: [0]
+      #   completion:
+      #     eval: 1e3
+      PandaLinkPose:
+        type: transform
+        frame: panda_link4
+        robot: robot_2
+        dimWeight: [0,0,0,0,0,1]
+        weight: 20
+        stiffness: 10
+        targetFrame:
+          robot: robot_2
+          frame: panda_link4
+          offset:
+            translation: [0., 0., -0.1]
+            rotation: [0.0, 0.0, 0.0]
+
+  

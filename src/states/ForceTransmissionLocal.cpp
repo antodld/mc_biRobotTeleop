@@ -108,8 +108,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     
     }
   
-    biRobotTeleop::HumanPose & h_b = ctl.getHumanPose(indx_%2);
-    biRobotTeleop::HumanPose & h_a = ctl.getHumanPose( (indx_ + 1)%2 );
+    const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose(indx_%2);
+    const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose( (indx_ + 1)%2 );
 
     sva::ForceVecd targetWrench_b = (h_b.getPose(limb_b_) * task_a_->frame().position().inv()).dualMul( (-measured_wrench_a) );
     biRobotTeleop::RobotPose robot_b_pose = indx_ == 1 ? robot_2_pose_ : robot_1_pose_;
@@ -120,6 +120,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     targetWrench_b = robot_b_pose.getOffset(limb_b_).inv().dualMul(targetWrench_b); //targetwrench is here in the body frame
     targetWrench_a = robot_a_pose.getOffset(limb_a_).inv().dualMul(targetWrench_a); //targetwrench is here in the body frame
 
+    task_a_->targetWrench(targetWrench_a);
+    task_b_->targetWrench(targetWrench_b);
 
     
     // task_robot_2_->targetWrench( target_force + sva::ForceVecd(r_d_.cwiseProduct(vel_.vector())));
