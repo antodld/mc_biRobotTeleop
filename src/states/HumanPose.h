@@ -27,6 +27,8 @@ struct HumanPose : mc_control::fsm::State
     return (X_0_a.translation() - X_0_b.translation()).norm() < tol;
   }
 
+  void calibrateSensorPose(mc_control::fsm::Controller & ctl, const std::string & robot_link, const std::string & device);
+
   std::map<std::string,biRobotTeleop::Limbs> human_deviceTolimbs_; //Map linking devices names to human limb attached
   std::string robot_device_; //Device name attached to the robot
   std::string robot_link_; //Robot link on which the device is attached
@@ -45,6 +47,10 @@ struct HumanPose : mc_control::fsm::State
 
   int human_indx_ = 0;
   std::string robot_name_ = "";
-  
+
+  std::string calibration_robot_link_;
+  std::string calibration_device_;
+  sva::PTransformd link_calib_offset_ = sva::PTransformd::Identity();
+  sva::PTransformd X_0_calibTarget_ = sva::PTransformd::Identity();
 
 };
