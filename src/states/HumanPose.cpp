@@ -3,6 +3,7 @@
 #include <mc_rbdyn/RobotLoader.h>
 #include "../BiRobotTeleoperation.h"
 #include <mc_rtc/gui/Robot.h>
+#include <mc_rtc/log/FlatLog.h>
 
 void HumanPose::configure(const mc_rtc::Configuration & config)
 {
@@ -117,6 +118,29 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
 
     if(ctl.robots().hasRobot("human_1"))
     {   
+        output("True");
+        return true;
+    }
+
+    if(ctl.datastore().has("Replay::Log"))
+    {
+        const auto log = ctl.datastore().get<std::shared_ptr<mc_rtc::log::FlatLog>>("Replay::Log");
+        for (int limb_indx = 0 ; limb_indx <= biRobotTeleop::Limbs::RightArm ; limb_indx++)
+        {
+            const auto limb = static_cast<biRobotTeleop::Limbs>(limb_indx);
+
+            sva::PTransformd pose = sva::PTransformd::Identity();
+            sva::MotionVecd vel = sva::MotionVecd::Zero();
+            bool active = false;
+            pose = log->get<sva::PTransformd>("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_pose", ctl.ctl_count(), pose);
+            vel = log->get<sva::MotionVecd>("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_vel", ctl.ctl_count(), vel);
+            active = log->get<bool>("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_active", ctl.ctl_count(), active);
+
+            h.setPose(limb,pose);
+            h.setVel(limb,vel);
+            h.setLimbActiveState(limb,active);
+
+        }
         output("True");
         return true;
     }

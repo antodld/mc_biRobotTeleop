@@ -138,23 +138,6 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);
 
-  // if(hp_1.getVel(biRobotTeleop::Limbs::LeftHand).linear().norm() < 0.05)
-  // {
-  //   posture_1->damping(100);
-  // }
-  // else
-  // {
-  //   posture_1->damping(3);
-  // }
-  // if(hp_2.getVel(biRobotTeleop::Limbs::RightHand).linear().norm() < 0.05)
-  // {
-  //   posture_2->damping(100);
-  // }
-  // else
-  // {
-  //   posture_2->damping(3);
-  // }
-
   std::vector<double> dist;
   std::vector<double> distVel;
   std::vector<double> softMaxVec;
@@ -187,9 +170,6 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
     const double w = softMax(dist,-softMaxGain_,i);
     biTasks_[i]->weight(std::max( 0.,weight_ * w - deltaDistGain_ * exp(10 * distVel.back())));
   }
-
-  // biTask_->updateHuman(hp_1,hp_2);
-
 
 
   ctl_.datastore().assign<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name() +"_tasks",biTasks_);

@@ -84,8 +84,8 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   hp_1_.addDataToGUI(*gui().get());
   hp_2_.addDataToGUI(*gui().get());
   
-  hp_1_filtered_.addDataToGUI(*gui().get());
-  hp_2_filtered_.addDataToGUI(*gui().get());
+  // hp_1_filtered_.addDataToGUI(*gui().get());
+  // hp_2_filtered_.addDataToGUI(*gui().get());
 
   hp_1_.addOffsetToGUI(*gui().get());
   hp_2_.addOffsetToGUI(*gui().get());
@@ -95,7 +95,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   hp_rec_.init(distant_human_name_, distant_robot_name_ ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
                         "tcp://" + ip_ + ":" + std::to_string(sub_port_));
 
-  hp_rec_.setSimulatedDelay(1);
+  hp_rec_.setSimulatedDelay(0);
 
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("robot",[this]() -> const mc_rbdyn::Robot & {return robot(); }));
@@ -113,6 +113,12 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   for (auto & c : robots().robot("robot_1").convexes())
   {
     mc_rtc::log::info("robot_1 convex name {}",c.first);
+  }
+
+  if(!datastore().has("Replay::Log"))
+  {
+    addReplayLog(0);
+    addReplayLog(1);
   }
 
   mc_rtc::log::success("BiRobotTeleoperation init done ");
@@ -161,6 +167,8 @@ bool BiRobotTeleoperation::run()
 
   server_->publish(gui_builder_);
 
+  ctl_count_++;
+
   return mc_control::fsm::Controller::run();
 }
 
@@ -175,6 +183,23 @@ void BiRobotTeleoperation::updateDistantHumanRobot()
     robot.mbc().alpha = hp_rec_.getRobot().mbc().alpha;
     robot.posW(hp_rec_.getRobot().posW());
   } 
+}
+
+void BiRobotTeleoperation::addReplayLog(const int indx)
+{
+  const auto & h = getHumanPose(indx);
+  for (int limb_indx = 0 ; limb_indx <= biRobotTeleop::Limbs::RightArm ; limb_indx++)
+  {
+
+    const auto limb = static_cast<biRobotTeleop::Limbs>(limb_indx);
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_pose",[this,indx,limb]() -> const sva::PTransformd {return getHumanPose(indx).getPose(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_vel",[this,indx,limb]() -> const sva::MotionVecd {return getHumanPose(indx).getVel(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_acc",[this,indx,limb]() -> const sva::MotionVecd {return getHumanPose(indx).getAcc(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_active",[this,indx,limb]() -> const bool {return getHumanPose(indx).limbActive(limb);});
+
+
+  }
+
 }
 
 bool BiRobotTeleoperation::joystickButtonPressed(const joystickButtonInputs input)

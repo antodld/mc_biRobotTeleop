@@ -128,6 +128,11 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     mc_rtc::log::error_and_throw<std::runtime_error>("Hard Emergency called");
   }
 
+  size_t ctl_count() const noexcept
+  {
+    return ctl_count_;
+  }
+
 private:
   
   std::unique_ptr<mc_control::ControllerServer> server_;
@@ -152,6 +157,9 @@ private:
 
   bool use_ros_ = false;
 
+  size_t ctl_count_ = 0;
+
+  void addReplayLog(const int indx);
 
 };
 
