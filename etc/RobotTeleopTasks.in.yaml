@@ -11,13 +11,17 @@
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
       rotation: [0,0.,0.]
+    variable_stiffness:
+      duration_to_full: 2
+      duration_at_low: 3
+      low: 1
     task:
       type: transform
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 15
+      stiffness: 6
 
   RobotArm_2:
     base: RobotArm_1

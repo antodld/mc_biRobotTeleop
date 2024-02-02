@@ -12,6 +12,11 @@ void RelativePose::configure(const mc_rtc::Configuration & config)
   stateConfig_("human_robot_RefTransfo",X_RefHuman_RefRobot_);
   stateConfig_("human_robot_TargetTransfo",X_TargetHuman_TargetRobot_);
 
+  full_stiff_duration_ = stateConfig_("variable_stiffness")("duration_to_full",1.);
+  low_stiff_duration_ = stateConfig_("variable_stiffness")("duration_at_low",1.);
+  low_stiffness_ = stateConfig_("variable_stiffness")("low",10);
+
+
   if(stateConfig_.has("completion_eval")){stateConfig_("completion_eval",completion_eval_);}
 
   humanTargetLimb_ = biRobotTeleop::str2Limb(stateConfig_("human_targetLimb"));
@@ -25,7 +30,9 @@ void RelativePose::start(mc_control::fsm::Controller & ctl_)
   task_ = std::make_shared<mc_tasks::TransformTask>(robot.frame(frame));
   
   task_->load(ctl_.solver(),stateConfig_("task"));
-
+  stiffness_=  task_->stiffness();
+  dt_ = ctl_.timeStep;
+  count_ = 0;
   task_->target(task_->frame().position());
 
   ctl_.solver().addTask(task_);
@@ -45,12 +52,31 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
   if(h.limbActive(biRobotTeleop::Limbs::Pelvis) && h.limbActive(humanTargetLimb_) )
   {
 
+    const double t_active = static_cast<double>(count_) * dt_;
+    if(t_active < low_stiff_duration_)
+    {
+      task_->stiffness(low_stiffness_);
+      count_ +=1;
+    }
+    else if (t_active <= low_stiff_duration_ + full_stiff_duration_)
+    {
+      const double alpha =  (t_active - low_stiff_duration_) / (full_stiff_duration_) ;
+      task_->stiffness( low_stiffness_ + alpha  * (stiffness_ - low_stiffness_)  );
+      count_ +=1;
+    }
+    else
+    {
+      stiffness_ = task_->stiffness();
+    }
+    
+
     X_0_hRef_ = h.getOffset(biRobotTeleop::Limbs::Pelvis) * h.getPose(biRobotTeleop::Limbs::Pelvis);
     X_0_hTarget_ = h.getOffset(humanTargetLimb_) * h.getPose(humanTargetLimb_);
     const auto X_hRef_htarget = X_0_hTarget_* X_0_hRef_.inv();
-    const sva::MotionVecd v_limb = h.getOffset(humanTargetLimb_) * h.getVel(humanTargetLimb_);
-    const sva::MotionVecd v_target = X_TargetHuman_TargetRobot_ * sva::PTransformd(X_0_hTarget_.rotation()) * v_limb ;
-
+    const sva::MotionVecd v_limb = sva::PTransformd(X_0_hTarget_.rotation()) * h.getVel(humanTargetLimb_);
+    const sva::MotionVecd v_target = X_TargetHuman_TargetRobot_ * v_limb ;
+    // mc_rtc::log::info("[{}] angular target {}",name(),v_target.angular());
+    // mc_rtc::log::info("[{}] angular vlimb {}",name(),v_limb.angular());
     const sva::PTransformd & X_0_RbtRef = robot.frame(robotRefFrame_).position();
 
 
@@ -66,6 +92,10 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
       return true;
     }
   
+  }
+  else
+  {
+    count_ = 0;
   }
   
   output("OK");
@@ -120,6 +150,7 @@ void RelativePose::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   ctl.solver().removeTask(task_);
   teardownGUI(ctl_);
+  count_ = 0;
 }
 
 EXPORT_SINGLE_STATE("RelativePose", RelativePose)

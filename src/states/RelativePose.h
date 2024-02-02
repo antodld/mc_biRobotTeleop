@@ -38,5 +38,12 @@ struct RelativePose : mc_control::fsm::State
   double completion_eval_ = 0;
   double weight_ = 0;
 
+  double stiffness_ = 0;
+  double low_stiffness_ = 10;
+
+  double dt_ = 0.005;
+  size_t count_ = 0;
+  double low_stiff_duration_ = 1; //duration the task is at low stiff
+  double full_stiff_duration_ = 1; //duration the task comes back to full stiff
 
 };
