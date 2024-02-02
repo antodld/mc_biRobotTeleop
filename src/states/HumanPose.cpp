@@ -258,7 +258,6 @@ void HumanPose::calibrateSensorPose(mc_control::fsm::Controller & ctl_ ,const st
         X_0_calibTarget_ = X_0_RobotLink;
 
         const sva::PTransformd offset = h.getOffset(human_deviceTolimbs_.at(device));
-        // const sva::PTransformd X_0_trackerRaw = sva::PTransformd(offset.rotation().transpose() * X_0_calibTarget_.rotation(),tracker_pose_func(device).translation()) ;
         const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device);
         const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
       
@@ -270,7 +269,7 @@ void HumanPose::calibrateSensorPose(mc_control::fsm::Controller & ctl_ ,const st
 
         X_link_sensor_.translation() = X_0_RobotRefLink.rotation() * (-T_robotTracker_tracker_0 - T_link_reflink_0);
 
-        mc_rtc::log::success("[{}] Calibrated translation\n{}",X_link_sensor_.translation());
+        mc_rtc::log::success("[{}] Calibrated translation: {}",name(),X_link_sensor_.translation().transpose());
 
     }
     
