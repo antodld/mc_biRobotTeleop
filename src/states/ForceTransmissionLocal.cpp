@@ -12,18 +12,15 @@ void ForceTransmissionLocal::configure(const mc_rtc::Configuration & config)
   config_.load(config);
   config("activation_threshold",activation_threshold_);
   config("deactivation_threshold",deactivation_threshold_);
-  if(config_.has("r1_r2_offset"))
-  {
-    config_("r1_r2_offset",X_r1_r2_);
-  }
+
 }
 
 void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   
-  robot_1_pose_.load(config_("robot_1")("limb_map"));
-  robot_2_pose_.load(config_("robot_2")("limb_map"));
+  robot_1_pose_ = ctl.r_1_;
+  robot_2_pose_ = ctl.r_2_;
 
   dt_ = ctl_.timeStep;
 

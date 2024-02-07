@@ -36,11 +36,16 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   void updateHumanLink(const mc_rbdyn::Robot & human,const std::string & link ,biRobotTeleop::HumanPose & human_pose,const biRobotTeleop::Limbs human_link)
   {
-    human_pose.setPose(human_link,human.bodyPosW(link));
-    const sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() ); 
-    human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link));
-    const sva::MotionVecd v = human_pose.getVel(human_link);
-    human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link) + sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
+    Eigen::Vector3d noise_pose = 0.005 * Eigen::Vector3d::Random();
+    human_pose.setPose(human_link,sva::PTransformd(noise_pose) * human.bodyPosW(link));
+    const sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() );
+    
+    auto noise = 0.05 * Eigen::Vector6d::Random();
+
+    human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link) + sva::MotionVecd(noise));
+
+    // const sva::MotionVecd v = human_pose.getVel(human_link);
+    // human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link) + sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
     human_pose.setLimbActiveState(human_link,true);
   }
   void updateHumanPose(const mc_rbdyn::Robot & human ,biRobotTeleop::HumanPose & human_pose)
@@ -72,10 +77,15 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     }
   }
 
+  void resetToRealRobot(const std::string & name);
+  
+
   void updateDistantHumanRobot();
 
   biRobotTeleop::HumanPose hp_1_;
   biRobotTeleop::HumanPose hp_2_;
+  biRobotTeleop::RobotPose r_1_;
+  biRobotTeleop::RobotPose r_2_;
   biRobotTeleop::HumanPose hp_1_filtered_;
   biRobotTeleop::HumanPose hp_2_filtered_;
   mc_rbdyn::RobotsPtr external_robots_ = nullptr;
@@ -105,6 +115,11 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     {
       return (indx == 0) ? hp_1_filtered_ : hp_2_filtered_;
     }
+  }
+
+  const biRobotTeleop::RobotPose & getRobotPose(const int indx) const
+  {
+      return (indx == 0) ? r_1_ : r_2_;
   }
 
   const mc_rtc::Configuration & getGlobalConfig() const noexcept

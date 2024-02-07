@@ -6,13 +6,33 @@
   GoHalfSitting_2:
     base: HalfSitting
     robot: robot_2
-    eval: 0.1
+    eval: 1e3
   
+  PandaPostureBase:
+    base: MetaTasks
+    tasks:
+      PandaPostureBaseTask:
+        type: posture
+        robot: robot_2
+        dimWeight: [1,0,0,0,0,0,0]
+        weight: 500
+        target: 
+          panda_joint1: [-1.542]
+          panda_joint2: [0]
+          panda_joint3: [0]
+          panda_joint4: [0]
+          panda_joint5: [0]
+          panda_joint6: [0]
+          panda_joint7: [0]
+        completion:
+          eval: 0.1
+
   GoHalfSitting:
     base: Parallel
     states:
       - GoHalfSitting_1
       - GoHalfSitting_2
+      - PandaPostureBase
 
   # GoHalfSitting:
   #   base: MetaTasks

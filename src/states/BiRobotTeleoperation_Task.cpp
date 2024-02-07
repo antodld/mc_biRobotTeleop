@@ -42,9 +42,6 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_1")("links",r1_linksName);
   state_config_("robot_2")("links",r2_linksName);
 
-  const biRobotTeleop::HumanPose & hp_1 = ctl.hp_1_;
-  const biRobotTeleop::HumanPose & hp_2 = ctl.hp_2_;
-
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
     mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Links list must not be empty {} {}",name(),r1_linksName.size(),r2_linksName.size());
@@ -83,6 +80,7 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   {
     std::shared_ptr<mc_tasks::biRobotTeleopTask> task = std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(),r1,r2,r1_links_[k],r2_links_[k]);
     task->load(ctl.solver(),state_config_);
+    task->updateRobotLinksMap(ctl.r_1_,ctl.r_2_);
     if(global_config.has("human_1"))
     {
       if(global_config.has("human_2"))
@@ -102,7 +100,7 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
 
     auto name = task->name();
     task->name(name + "_" + std::to_string(k));
-    task->updateHuman(hp_1,hp_2);
+    task->updateHuman(ctl.hp_1_,ctl.hp_2_);
     ctl_.solver().addTask(task);
     biTasks_.push_back(task);
 
@@ -111,9 +109,6 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   addToLogger(ctl_);
 
   ctl.gui()->addElement({"States",name()},mc_rtc::gui::Checkbox("Use Estimated Human",[this]()->bool {return useEstimatedHuman_;},[this](){useEstimatedHuman_ = !useEstimatedHuman_;}));
-
-  mc_rtc::log::info("[{}] create datastore {}",name(),name()+"_tasks" );
-  ctl_.datastore().make<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name()+"_tasks",biTasks_);
 
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);
@@ -171,9 +166,6 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
     biTasks_[i]->weight(std::max( 0.,weight_ * w - deltaDistGain_ * exp(10 * distVel.back())));
   }
 
-
-  ctl_.datastore().assign<std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>>>( name() +"_tasks",biTasks_);
-
   output("OK");
   return true;
 
@@ -206,7 +198,6 @@ void BiRobotTeleoperation_Task::teardown(mc_control::fsm::Controller & ctl_)
   {
     ctl_.solver().removeTask(task);
   }
-  ctl_.datastore().remove(name()+"_tasks");
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);
   posture_1->weight(10);

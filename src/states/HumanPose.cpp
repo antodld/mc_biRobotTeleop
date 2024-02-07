@@ -207,6 +207,7 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
             
         }
     }
+    
     else if(human_sim_ && human_sim_rec_.getRobot().name() == "human")
     {
         const mc_rbdyn::Robot & human_robot = human_sim_rec_.getRobot();

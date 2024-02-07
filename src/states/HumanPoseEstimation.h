@@ -33,17 +33,17 @@ struct HumanPoseEstimation : mc_control::fsm::State
 
   void set_estimated_values(mc_rbdyn::Robot & human, const std::string & link, biRobotTeleop::Limbs limb)
   {
-    const sva::PTransformd offset = h_estimated_.getOffset(limb);
+    const sva::PTransformd & offset = h_estimated_.getOffset(limb);
 
     h_estimated_.setPose(limb, offset.inv() * human.frame(link).position());
-    h_estimated_.setVel(limb, offset.inv() * human.bodyVelW(link));
-    const sva::MotionVecd v = h_estimated_.getVel(limb);
-    const sva::MotionVecd & acc_body = human.bodyAccB(link);
-    h_estimated_.setAcc(limb, 
-                        (offset.inv() *
-                        sva::PTransformd(human.frame(link).position().rotation().transpose(),Eigen::Vector3d::Zero()) *
-                        acc_body) +
-                        sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
+    h_estimated_.setVel(limb,sva::MotionVecd::Zero());
+    h_estimated_.setAcc(limb,sva::MotionVecd::Zero());
+    // h_estimated_.setVel(limb, human.bodyVelW(link));
+    // const sva::MotionVecd v = h_estimated_.getVel(limb);
+    // const sva::MotionVecd & acc_body = human.bodyAccB(link);
+    // h_estimated_.setAcc(limb, 
+    //                      sva::PTransformd(human.frame(link).position().inv().rotation()) * acc_body +
+    //                      sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
   }
 
   Eigen::VectorXd solve();

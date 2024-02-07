@@ -1,66 +1,24 @@
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
-    stiffness: 9
+    stiffness: 20
     softMaxGain: 40
     deltaDistGain: 0
-    weight: 500
+    weight: 10
     arrow:
       shaft_diam: 0.005
     linearWeight:
-      weightRange: [20,1000]
+      # weightRange: [5,20]
+      weightRange: [10,500]
       distanceRange: [0.4,0.1]
     robot_1:
       name: robot_1
       links: [LeftHand]
       unactive_joints: ["Root","CHEST_P","CHEST_Y"]
-      limb_map:
-        left_hand: 
-          name: "l_wrist"
-        right_hand: 
-          name: "r_wrist"
-        left_arm: 
-          name: "L_SHOULDER_Y_LINK"
-        right_arm: 
-          name: "R_SHOULDER_Y_LINK"
-        left_forearm:
-          name: "L_ELBOW_P_LINK"
-        right_forearm: 
-          name: "R_ELBOW_P_LINK"  
-        pelvis:
-          name: "body" 
     robot_2: 
       name: "robot_2"
       links: ["RightArm","RightForearm","RightHand"]
       unactive_joints: []
-      limb_map:
-        left_hand:
-          name: "panda_link8"
-          convex: "convex_panda_link7"
-          offset:
-            translation: [0,0,-0.05]
-            rotation: [1.57,0,3.14]
-        right_hand: 
-          name: "panda_link8"
-          convex: "convex_panda_link7"
-          offset:
-            translation: [0,0,-0.05]
-            rotation: [1.57,0,3.14]
-        left_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
-        right_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
-        left_forearm:
-          name: "panda_link5"
-          convex: "convex_panda_link5"
-        right_forearm:
-          name: "panda_link5" 
-          convex: "convex_panda_link5"
-        pelvis: 
-          name: "panda_link0" 
-          convex: "convex_panda_link0"
 
   BiTeleopTask_2:
     base: BiTeleopTask_1
@@ -73,56 +31,4 @@
     robot_2:
       isMainRobot: 0
       links: ["RightHand"]
-
-  Forces:
-    base: ForceTransmission
-    integration_window: 5 #[s]
-    activation_threshold: 10 #6d force norm
-    deactivation_threshold: 0.2 #[m]
-    task:
-      admittance: [0.,0.,0.,0.,0.01,0.01]
-      maxVel:
-        angular: [10,1,1]
-        linear: [10,10,10]
-    robot_1:
-      force_sensor_frames: ["LeftHand","RightHand"]
-      limb_map:
-        left_hand: 
-          name: "l_wrist"
-        right_hand: 
-          name: "r_wrist"
-        left_arm: 
-          name: "L_ELBOW_P_LINK"
-        right_arm: 
-          name: "R_ELBOW_P_LINK"
-        left_forearm:
-          name: "L_SHOULDER_Y_LINK"
-        right_forearm: 
-          name: "R_SHOULDER_Y_LINK"  
-        pelvis:
-          name: "body" 
-    robot_2: 
-      force_sensor_frames: ["panda_link8"]
-      limb_map:
-        left_hand:
-          name: "panda_link8"
-          convex: "convex_panda_link7"
-        right_hand: 
-          name: "panda_link8"
-          convex: "convex_panda_link7"
-        left_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
-        right_arm:
-          name: "panda_link6"
-          convex: "convex_panda_link6"
-        left_forearm:
-          name: "panda_link5"
-          convex: "convex_panda_link5"
-        right_forearm:
-          name: "panda_link5" 
-          convex: "convex_panda_link5"
-        pelvis: 
-          name: "panda_link0" 
-          convex: "convex_panda_link0"
 

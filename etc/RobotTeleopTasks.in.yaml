@@ -21,7 +21,7 @@
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 6
+      stiffness: 10
 
   RobotArm_2:
     base: RobotArm_1
@@ -31,7 +31,7 @@
     robot_refFrame: panda_link0
     human_robot_RefTransfo: 
       translation: [-0.15,0.,-0.4]
-      rotation: [0.,0.,-1.57]
+      rotation: [0.,0.,0.]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
       rotation: [1.57,0,3.14]

@@ -1,0 +1,44 @@
+robot_limb_map:
+  robot_1:
+    left_hand: 
+      name: "l_wrist"
+    right_hand: 
+      name: "r_wrist"
+    left_arm: 
+      name: "L_SHOULDER_Y_LINK"
+    right_arm: 
+      name: "R_SHOULDER_Y_LINK"
+    left_forearm:
+      name: "L_ELBOW_P_LINK"
+    right_forearm: 
+      name: "R_ELBOW_P_LINK"  
+    pelvis:
+      name: "body" 
+  robot_2: 
+    left_hand:
+      name: "panda_link8"
+      convex: "convex_panda_link7"
+      offset:
+        translation: [0,0.05,-0.02]
+        rotation: [1.57,0,3.14]
+    right_hand: 
+      name: "panda_link8"
+      convex: "convex_panda_link7"
+      offset:
+        translation: [0,0.05,-0.02]
+        rotation: [1.57,0,3.14]
+    left_arm:
+      name: "panda_link0"
+      convex: "convex_panda_link0"
+    right_arm:
+      name: "panda_link0"
+      convex: "convex_panda_link0"
+    left_forearm:
+      name: "panda_link0"
+      convex: "convex_panda_link0"
+    right_forearm:
+      name: "panda_link0" 
+      convex: "convex_panda_link0"
+    pelvis: 
+      name: "panda_link0" 
+      convex: "convex_panda_link0"

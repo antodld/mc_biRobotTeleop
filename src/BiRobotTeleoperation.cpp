@@ -3,6 +3,10 @@
 #include "yaml_path.h"
 #include <mc_tasks/biRobotTeleopTask.h>
 #include <mc_rtc/gui/RobotMsg.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
+#include <RBDyn/FA.h>
+#include <RBDyn/ID.h>
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -35,6 +39,12 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   {
     hp_2_.setCvx(config("human_2")("convex"));
     hp_2_filtered_.setCvx(config("human_2")("convex"));
+  }
+
+  if(config.has("robot_limb_map"))
+  {
+    r_1_.load(config("robot_limb_map")("robot_1"));
+    r_2_.load(config("robot_limb_map")("robot_2"));
   }
 
   global_config_.load(config);
@@ -81,14 +91,14 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     hp_2_.addDataToGUI(gui_builder_);
   }
 
-  hp_1_.addDataToGUI(*gui().get());
-  hp_2_.addDataToGUI(*gui().get());
-  
-  // hp_1_filtered_.addDataToGUI(*gui().get());
-  // hp_2_filtered_.addDataToGUI(*gui().get());
-
-  hp_1_.addOffsetToGUI(*gui().get());
-  hp_2_.addOffsetToGUI(*gui().get());
+  if(config("local_controller")("display_human_pose"))
+  {
+    hp_1_.addPoseToGUI(*gui().get());
+    hp_2_.addPoseToGUI(*gui().get());
+    
+    hp_1_.addOffsetToGUI(*gui().get());
+    hp_2_.addOffsetToGUI(*gui().get());
+  }
 
   distant_robot_name_ = (robot().name() == "robot_1") ? "robot_2" : "robot_1";
 
@@ -99,8 +109,17 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("robot",[this]() -> const mc_rbdyn::Robot & {return robot(); }));
+  if(robots().robot("robot_2").module().name == "panda_default")
+  {
+    gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("panda_robot",[this]() -> const mc_rbdyn::Robot & {return robots().robot("robot_2"); }));
+  }
   gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Distant Controller Online",[this]() -> bool {return hp_rec_.online() ;},[this](){}));
   gui()->addElement({},mc_rtc::gui::Button("Emergency Stop : B",[this](){hardEmergency();}));
+
+  if(global_config_.has("Franka"))
+  {
+    gui()->addElement({"Robots"},mc_rtc::gui::Button("Reset robot_2",[this](){resetToRealRobot("robot_2");}));
+  }
 
   for (auto & f : robots().robot("robot_2").frames())
   {
@@ -124,12 +143,28 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   mc_rtc::log::success("BiRobotTeleoperation init done ");
 }
 
+void BiRobotTeleoperation::resetToRealRobot(const std::string & name)
+{
+  mc_rtc::log::info("Reset {} state to real one",name);
+  auto & robot = robots().robot(name);
+  auto & realRobot = realRobots().robot(name);
+  robot.mbc().q = realRobot.mbc().q;
+  robot.mbc().alpha = realRobot.mbc().alpha;
+  rbd::forwardKinematics(robot.mb(),robot.mbc());
+  rbd::forwardVelocity(robot.mb(),robot.mbc());
+  rbd::forwardAcceleration(robot.mb(),robot.mbc());
+}
+
 bool BiRobotTeleoperation::run()
 {
 
   if(joystickButtonPressed(joystickButtonInputs::B))
   {
     hardEmergency();
+  }
+  if(joystickButtonPressed(joystickButtonInputs::X))
+  {
+    resetToRealRobot("robot_2");
   }
 
   if(hp_rec_.online())
@@ -143,6 +178,24 @@ bool BiRobotTeleoperation::run()
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
     updateHumanPose(human_1,hp_1_);
     updateHumanPose(human_2,hp_2_);
+  }
+
+  //Panda Close Loop
+  if(global_config_.has("Franka"))
+  {
+    if(global_config_("Franka")("ControlMode") == "Torque")
+    {
+      auto & robot = robots().robot("robot_2");
+      auto & realRobot = realRobots().robot("robot_2");
+      robot.mbc().q = realRobot.mbc().q;
+      robot.mbc().alpha = realRobot.mbc().alpha;
+      rbd::forwardKinematics(robot.mb(),robot.mbc());
+      rbd::forwardVelocity(robot.mb(),robot.mbc());
+      rbd::forwardAcceleration(robot.mb(),robot.mbc());
+      // rbd::InverseDynamics id(robot.mb());
+      // id.inverseDynamics(robot.mb(),robot.mbc());
+      // mc_rtc::log::info(rbd::paramToVector(robot.mb(),robot.mbc().jointTorque));
+    }
   }
 
   if(use_ros_)
@@ -166,6 +219,7 @@ bool BiRobotTeleoperation::run()
   }
 
   server_->publish(gui_builder_);
+  hp_rec_.runAndUpdate();
 
   ctl_count_++;
 
@@ -192,9 +246,9 @@ void BiRobotTeleoperation::addReplayLog(const int indx)
   {
 
     const auto limb = static_cast<biRobotTeleop::Limbs>(limb_indx);
-    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_pose",[this,indx,limb]() -> const sva::PTransformd {return getHumanPose(indx).getPose(limb);});
-    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_vel",[this,indx,limb]() -> const sva::MotionVecd {return getHumanPose(indx).getVel(limb);});
-    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_acc",[this,indx,limb]() -> const sva::MotionVecd {return getHumanPose(indx).getAcc(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_pose",[this,indx,limb]() -> const sva::PTransformd &{return getHumanPose(indx).getPose(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_vel",[this,indx,limb]() -> const sva::MotionVecd &{return getHumanPose(indx).getVel(limb);});
+    logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_acc",[this,indx,limb]() -> const sva::MotionVecd &{return getHumanPose(indx).getAcc(limb);});
     logger().addLogEntry("Replay_"+h.name() +"_"+ biRobotTeleop::limb2Str(limb) + "_active",[this,indx,limb]() -> const bool {return getHumanPose(indx).limbActive(limb);});
 
 
@@ -213,8 +267,9 @@ bool BiRobotTeleoperation::joystickButtonPressed(const joystickButtonInputs inpu
 
   if(joystick_online)
   {
+    auto & buttonEvent_func = datastore().get<std::function<bool(joystickButtonInputs)>>("Joystick::ButtonEvent");
     auto & button_func = datastore().get<std::function<bool(joystickButtonInputs)>>("Joystick::Button");
-    return  button_func(input);
+    return  button_func(input) && buttonEvent_func(input);
   }
   return false;
 }
@@ -223,8 +278,10 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
 {
   mc_control::fsm::Controller::reset(reset_data);
 
-  mc_rbdyn::Robot & robot_2 = robots().robot("robot_2");
-  mc_rbdyn::Robot & robot_1 = robots().robot("robot_1");
+  auto & robot_2 = robots().robot("robot_2");
+  auto & robot_1 = robots().robot("robot_1");
+
+  robot_2.posW(sva::PTransformd::Identity());
 
   
   if(robot_2.module().name != "panda_default")
@@ -233,7 +290,9 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   }
   else
   {
-    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot_2.posW() );
+    robot_2.mbc().gravity.setZero();
+    robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0.)) * robot_2.posW() );
+    realRobots().robot("robot_2").posW(robot_2.posW());
     // robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
   }
 
@@ -242,6 +301,9 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
+
+    human_1.posW(sva::PTransformd::Identity());
+    human_2.posW(sva::PTransformd::Identity());
     
     human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0)) * alignFeet(robot_1,"Foot",human_2,"Sole") );
 
@@ -252,7 +314,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     else
     {
       // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
-      human_1.posW(sva::PTransformd(sva::RotZ(-M_PI_2), Eigen::Vector3d(0, 0.4, 0.15)) * robot_2.posW() );
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.7, 0, 0.15)) * robot_2.posW() );
     }
   }
   

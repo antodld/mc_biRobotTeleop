@@ -25,13 +25,13 @@ robots:
     module: HRP4
   robot_2:
     module: PandaDefault
-  # human_1:
-  #   module: human
-  # human_2:
-  #   module: human
+  human_1:
+    module: human
+  human_2:
+    module: human
 
-#mc_humanMap.yaml
-@HumanMap.yaml
+@mc_humanMap.yaml
+#HumanMap.yaml
 
 # General constraints, always on
 constraints:
@@ -39,6 +39,10 @@ constraints:
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 - type: kinematics
+  robot: robot_2
+  damper: [0.1, 0.01, 0.5]
+- type: kinematics
+  robot: robot_1
   damper: [0.1, 0.01, 0.5]
 - type: dynamics
   robot: robot_2
@@ -74,6 +78,8 @@ contacts:
 
 @Observers.yaml
 
+@RobotLimbMap.yaml
+
 human:
   limb_map:
     left_hand: "LHandLink"
@@ -106,6 +112,8 @@ states:
 @HalfSitting.yaml
 
 @BiRobotTasks.yaml
+
+@ForcesTasks.yaml
 
 @DampingTasks.yaml
 
@@ -168,7 +176,7 @@ states:
     states:
     # - BiTeleopTask_1
     - BiTeleopTask_2
-    # - Forces
+    - Forces
     - ChoiceBiTeleop
     delays:
       ChoiceBiTeleop: 0.5
@@ -208,7 +216,7 @@ states:
     base: Parallel
     states:
       - Robot::Teleop
-      # - Human::Free
+      - Human::Free
       - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
@@ -263,9 +271,9 @@ UDPPlugin:
       ignoredJoints:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
 
-# Plugins: [ROS,UDPPlugin, OpenVRPlugin,mc_joystick_plugin]
-# Plugins: [ROS,mc_joystick_plugin]
-Plugins: [ROS,OpenVRPlugin,mc_joystick_plugin]
-# Plugins: [ROS,OpenVRPlugin]
+# Replay
+# UDPPlugin
+# OpenVRPlugin
+Plugins: [ROS,mc_joystick_plugin]
 
 

@@ -22,7 +22,6 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   std::string robot_name = ctl_.robots().robot(0).name();
   
-  robotPose_.load(config_(robot_name)("limb_map"));
 
   dt_ = ctl_.timeStep;
 
@@ -33,7 +32,9 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   }
 
   const int robot_indx = ctl_.robots().robotIndex(robot_name);
-  
+  robotPose_ = ctl.getRobotPose(robot_indx);
+
+
   const mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_indx);
   dt_ = ctl.timeStep;
 

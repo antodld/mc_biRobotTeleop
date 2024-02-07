@@ -1,10 +1,10 @@
-#human_1 paramters
+#human_1 parameters
 human_1:
   convex:
     pelvis:
       offset:
-        translation: [0,0.15,0]
-        rotation: [0,1.57,1.57]
+        translation: [0,0.15,0.1]
+        rotation: [0,-1.57,-1.57]
     arm:
       radius: 0.05
       length: 0.2
@@ -30,7 +30,7 @@ human_1:
         right:
           rotation: [1.57,0,3.14]
 
-#human_2 paramters
+#human_2 parameters
 human_2:
   convex:
     pelvis: #pelvis back
