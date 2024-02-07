@@ -48,14 +48,12 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_2_;
   std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_1_;
 
-  int indx_ = 0; //map robot to a 
+  int indx_ = 0; //map robot to a either 1 or 2
 
   biRobotTeleop::Limbs limb_a_ = biRobotTeleop::Limbs::Head; //limbs of task a
   biRobotTeleop::Limbs limb_b_ = biRobotTeleop::Limbs::Head; //limbs of task b
 
   bool done_ = false;
-
-  bool stop_ = false;
 
   bool active_ = false;
 
@@ -63,6 +61,8 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_robot_1_; //the threshold must be over a low pass filtered value of the force/sensor
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_robot_2_; //the threshold must be over a low pass filtered value of the force/sensor
+  std::vector<bool> robot_1_force_activation_;
+  std::vector<bool> robot_2_force_activation_;
 
   mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
 
@@ -77,6 +77,9 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   biRobotTeleop::RobotPose robot_1_pose_;
   biRobotTeleop::RobotPose robot_2_pose_;
+
+  sva::PTransformd X_f_contactF_b = sva::PTransformd::Identity();
+  sva::PTransformd X_f_contactF_a = sva::PTransformd::Identity();
 
 
   double activation_threshold_ = 10; //force threshold on which the force control is activated;
