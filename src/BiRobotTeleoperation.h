@@ -36,11 +36,11 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   void updateHumanLink(const mc_rbdyn::Robot & human,const std::string & link ,biRobotTeleop::HumanPose & human_pose,const biRobotTeleop::Limbs human_link)
   {
-    Eigen::Vector3d noise_pose = 0.005 * Eigen::Vector3d::Random();
+    Eigen::Vector3d noise_pose = 0.00 * Eigen::Vector3d::Random();
     human_pose.setPose(human_link,sva::PTransformd(noise_pose) * human.bodyPosW(link));
     const sva::PTransformd X_link_link0 = sva::PTransformd( (human_pose.getPose(human_link).inv()).rotation(),Eigen::Vector3d::Zero() );
     
-    auto noise = 0.05 * Eigen::Vector6d::Random();
+    auto noise = 0.0 * Eigen::Vector6d::Random();
 
     human_pose.setVel(human_link,X_link_link0 * human.bodyVelB(link) + sva::MotionVecd(noise));
 
@@ -149,11 +149,39 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return ctl_count_;
   }
 
+  const sva::ForceVecd getCalibratedExtWrench(const mc_rbdyn::Robot & robot) const
+  {
+    assert(external_wrench_calib_.size() > 1 );
+    auto & ext_wrench = robot.mbc().force.at(0);
+    auto & off = robot.name() == "robot_1" ? external_wrench_calib_[0] : external_wrench_calib_[1];
+    return ext_wrench - off;
+  }
+
+  void CalibrateExtWrench(const mc_rbdyn::Robot & robot)
+  {
+    assert(external_wrench_calib_.size() > 1 );
+    auto & ext_wrench = robot.mbc().force.at(0);
+    if(robot.name() == "robot_1")
+    {
+      external_wrench_calib_[0] = ext_wrench;
+    }
+    else
+    {
+      external_wrench_calib_[1] = ext_wrench;
+    }
+    mc_rtc::log::info("External wrench calibrated on {} at {}",ext_wrench,robot.name());
+
+  }
+
+  std::vector<sva::ForceVecd> external_wrench_calib_;
+
+
 private:
   
   std::unique_ptr<mc_control::ControllerServer> server_;
   mc_rtc::gui::StateBuilder gui_builder_;
   
+  double cl_gain_ = 1e-6;
 
   //distant_controller_data
   std::string ip_ = "localhost"; 

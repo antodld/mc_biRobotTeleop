@@ -14,9 +14,14 @@ void BiRobotTeleoperation_Initial::start(mc_control::fsm::Controller & ctl_)
 
 }
 
-bool BiRobotTeleoperation_Initial::run(mc_control::fsm::Controller & ctl)
+bool BiRobotTeleoperation_Initial::run(mc_control::fsm::Controller & ctl_)
 {
+  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  ctl.CalibrateExtWrench(ctl.realRobot("robot_1"));
+  ctl.CalibrateExtWrench(ctl.realRobot("robot_2"));
+  count_++;
   output("OK");
+  
   if(ctl.datastore().has("UDPPlugin"))
   { // When using the UDP plugin wait until hrp4 is ready
     const std::string datastore_func_name = "UDPPlugin::robot_1::reset";
@@ -32,13 +37,10 @@ bool BiRobotTeleoperation_Initial::run(mc_control::fsm::Controller & ctl)
       mc_rtc::log::info("waiting for robot_1 on udp");
 
     }
-    return ctl.datastore().get<bool>("robot_1_IsReady");
+    return ctl.datastore().get<bool>("robot_1_IsReady") && count_ < 20;
   }
 
-  return true;
-
-
-
+  return count_ < 20;
   
 }
 

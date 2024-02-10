@@ -36,7 +36,7 @@ struct ForceTransmissionLocal : mc_control::fsm::State
    * @param limb_human 
    * @return Eigen::Vector3d 
    */
-  Eigen::Vector3d getContactPose(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
+  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
 
   bool checkActivation(mc_control::fsm::Controller & ctl_,const int robot_indx);
 
@@ -48,10 +48,13 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_2_;
   std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_1_;
 
+  std::string robot_b_custom_force_sensor_name_;
+
+
   int indx_ = 0; //map robot to a either 1 or 2
 
-  biRobotTeleop::Limbs limb_a_ = biRobotTeleop::Limbs::Head; //limbs of task a
-  biRobotTeleop::Limbs limb_b_ = biRobotTeleop::Limbs::Head; //limbs of task b
+  biRobotTeleop::Limbs limb_a_ = biRobotTeleop::Limbs::Head; //limbs of task on robot a
+  biRobotTeleop::Limbs limb_b_ = biRobotTeleop::Limbs::Head; //limbs of task on robot b
 
   bool done_ = false;
 
@@ -61,8 +64,12 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_robot_1_; //the threshold must be over a low pass filtered value of the force/sensor
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_robot_2_; //the threshold must be over a low pass filtered value of the force/sensor
-  std::vector<bool> robot_1_force_activation_;
-  std::vector<bool> robot_2_force_activation_;
+  std::vector<bool> robot_1_force_activation_; //to enforce activation
+  std::vector<bool> robot_2_force_activation_; //to enforce activation
+  bool activation_enforced_ = false;
+
+  std::string robot_b_name_;
+  std::string robot_a_name_;
 
   mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
 
@@ -75,14 +82,8 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   sva::ForceVecd measured_force_robot_2_ = sva::ForceVecd::Zero(); //measured force in the link frame
 
 
-  biRobotTeleop::RobotPose robot_1_pose_;
-  biRobotTeleop::RobotPose robot_2_pose_;
-
-  sva::PTransformd X_f_contactF_b = sva::PTransformd::Identity();
-  sva::PTransformd X_f_contactF_a = sva::PTransformd::Identity();
-
-
-  double activation_threshold_ = 10; //force threshold on which the force control is activated;
+  double force_activation_threshold_ = 10; //force threshold on which the force control is activated;
+  double distance_activation_threshold_ = 0.02;
   double deactivation_threshold_ = 0.15; //distance threshold on which the force control is deactivated
 
 };

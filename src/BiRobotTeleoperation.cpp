@@ -4,9 +4,11 @@
 #include <mc_tasks/biRobotTeleopTask.h>
 #include <mc_rtc/gui/RobotMsg.h>
 #include <RBDyn/FK.h>
+#include <RBDyn/FD.h>
 #include <RBDyn/FV.h>
 #include <RBDyn/FA.h>
 #include <RBDyn/ID.h>
+#include <RBDyn/Coriolis.h>
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -15,7 +17,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   // std::cout << "//" << std::endl;
   // config_.load(mc_rtc::Configuration(BiRobotTask_CONFIG_PATH));
 
-
+  
   external_robots_ = mc_rbdyn::Robots::make();
 
   // const auto robot_2_indx = robots().robot("robot_2").robotIndex();
@@ -46,6 +48,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     r_1_.load(config("robot_limb_map")("robot_1"));
     r_2_.load(config("robot_limb_map")("robot_2"));
   }
+
 
   global_config_.load(config);
   if(global_config_.has("Plugins"))
@@ -116,9 +119,25 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   gui()->addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Distant Controller Online",[this]() -> bool {return hp_rec_.online() ;},[this](){}));
   gui()->addElement({},mc_rtc::gui::Button("Emergency Stop : B",[this](){hardEmergency();}));
 
+  for (auto & robot : realRobots())
+  { 
+    external_wrench_calib_.push_back(sva::ForceVecd::Zero());
+    logger().addLogEntry(robot.name() + "_ext_force_base",[this,&robot]() -> const sva::ForceVecd {return getCalibratedExtWrench(robot);});
+  }
+
   if(global_config_.has("Franka"))
   {
-    gui()->addElement({"Robots"},mc_rtc::gui::Button("Reset robot_2",[this](){resetToRealRobot("robot_2");}));
+    gui()->addElement({"Robots"},
+          mc_rtc::gui::Button("Reset robot_2",[this](){resetToRealRobot("robot_2");}));
+    gui()->addElement({"Robots","External Wrench"},
+          mc_rtc::gui::Button("Calibrate robot_1",[this](){CalibrateExtWrench(realRobot("robot_1"));}),
+          mc_rtc::gui::ArrayLabel("robot_1 ext wrench",{"cx","cy","cz","fx","fy","fz"},
+                                  [this]() -> sva::ForceVecd {return getCalibratedExtWrench(realRobot("robot_1"));}),
+          mc_rtc::gui::Button("Calibrate robot_2",[this](){CalibrateExtWrench(realRobot("robot_2"));}),
+          mc_rtc::gui::ArrayLabel("robot_2 ext wrench",{"cx","cy","cz","fx","fy","fz"},
+                                  [this]() -> sva::ForceVecd {return getCalibratedExtWrench(realRobot("robot_2"));})
+
+    );
   }
 
   for (auto & f : robots().robot("robot_2").frames())
@@ -138,6 +157,14 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   {
     addReplayLog(0);
     addReplayLog(1);
+  }
+
+  if(global_config_.has("Franka"))
+  {
+    if(global_config_("Franka")("ControlMode") == "Torque")
+    {
+      gui()->addElement({"Robots"},mc_rtc::gui::NumberInput("Close Loop gain",[this]() -> const double {return cl_gain_;},[this](const double k){cl_gain_ = k;}));
+    }
   }
 
   mc_rtc::log::success("BiRobotTeleoperation init done ");
@@ -187,13 +214,24 @@ bool BiRobotTeleoperation::run()
     {
       auto & robot = robots().robot("robot_2");
       auto & realRobot = realRobots().robot("robot_2");
+      rbd::ForwardDynamics fd(robot.mb());
+      fd.computeH(robot.mb(),realRobot.mbc());
+      const Eigen::VectorXd alpha_r = rbd::paramToVector(robot.mb(),robot.mbc().alpha);
+      const Eigen::VectorXd alpha = rbd::paramToVector(robot.mb(),realRobot.mbc().alpha);
+      const auto s = alpha_r - alpha;
+      rbd::Coriolis C(realRobot.mb());
+      const auto C_mat = C.coriolis(realRobot.mb(),realRobot.mbc());
+      const Eigen::MatrixXd K = cl_gain_ * fd.H();
       robot.mbc().q = realRobot.mbc().q;
       robot.mbc().alpha = realRobot.mbc().alpha;
       rbd::forwardKinematics(robot.mb(),robot.mbc());
       rbd::forwardVelocity(robot.mb(),robot.mbc());
       rbd::forwardAcceleration(robot.mb(),robot.mbc());
-      // rbd::InverseDynamics id(robot.mb());
-      // id.inverseDynamics(robot.mb(),robot.mbc());
+      rbd::InverseDynamics id(robot.mb());
+      id.inverseDynamics(robot.mb(),robot.mbc());
+
+      robot.mbc().jointTorque = rbd::vectorToParam(robot.mb(), rbd::paramToVector(robot.mb(),robot.mbc().jointTorque) +  (C_mat + K) * s );
+
       // mc_rtc::log::info(rbd::paramToVector(robot.mb(),robot.mbc().jointTorque));
     }
   }
@@ -290,11 +328,13 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   }
   else
   {
-    robot_2.mbc().gravity.setZero();
+    // robot_2.mbc().gravity.setZero();
     robot_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(-0.6, 0., 0.)) * robot_2.posW() );
     realRobots().robot("robot_2").posW(robot_2.posW());
     // robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
+    
   }
+
 
 
   if(robots().hasRobot("human_1"))
@@ -314,7 +354,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     else
     {
       // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
-      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.7, 0, 0.15)) * robot_2.posW() );
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW() ); //0.7
     }
   }
   

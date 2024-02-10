@@ -119,7 +119,7 @@ struct ForceTransmission : mc_control::fsm::State
   std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_; //the threshold must be over a low pass filtered value of the force/sensor
   mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
 
-  std::string contact_limb_ = "None"; //limb in contact with a robot link equipped of force sensors 
+  std::string contact_limb_ = "None"; //human limb in contact with a robot link equipped of force sensors 
   std::string robot_limb_ = "None"; //robot limb in contact 
   std::vector<std::string> force_sensor_limbs_;
 

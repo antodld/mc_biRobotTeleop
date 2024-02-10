@@ -224,7 +224,7 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
                                                  
 
     //We target minus the measured force on the distant robot, locally, the distant robot coincide with the local human pose
-    //target force is expressed in task frame
+    //target force is expressed in robot unified frame
     const sva::ForceVecd target_force_h_frame = -getReceivedData<sva::ForceVecd>(received_force_);
     const sva::ForceVecd target_force = X_hContact_rContact.dualMul(target_force_h_frame );
 
