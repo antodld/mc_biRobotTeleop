@@ -37,7 +37,7 @@ bool BiRobotTeleoperation_Initial::run(mc_control::fsm::Controller & ctl_)
       mc_rtc::log::info("waiting for robot_1 on udp");
 
     }
-    return ctl.datastore().get<bool>("robot_1_IsReady") && count_ < 20;
+    return ctl.datastore().get<bool>("robot_1_IsReady") && count_ < 600;
   }
 
   return count_ < 20;

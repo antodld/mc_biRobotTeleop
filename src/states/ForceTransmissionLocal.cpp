@@ -48,6 +48,7 @@ void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
 bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  output("OK");
 
   if(!active_) //if not active, look if the force sensors measure a contact
   {
@@ -56,114 +57,106 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     {
       checkActivation(ctl_,2);
     }
+    return true;
   }
 
-  if(active_)
+  if(active_force_measurement_ != nullptr)
   {
-    
-    if(active_force_measurement_ != nullptr)
+    double d_b = getContactDistance(ctl_,indx_,limb_a_,limb_b_).norm(); 
+    double d_a = getContactDistance(ctl_,indx_ == 1 ? 2 : 1,limb_b_,limb_a_).norm(); 
+
+    active_force_measurement_->update(task_a_->frame().wrench());
+
+    if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
+        d_a > deactivation_threshold_) && !activation_enforced_)
+    // if( (d_a > deactivation_threshold_ ) && !activation_enforced_ )
     {
-      double d_b = getContactDistance(ctl_,indx_,limb_a_,limb_b_).norm(); 
-      double d_a = getContactDistance(ctl_,indx_ == 1 ? 2 : 1,limb_b_,limb_a_).norm(); 
-
-      active_force_measurement_->update(task_a_->frame().wrench());
-
-      // if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
-      //     d > deactivation_threshold_) && !activation_enforced_)
-      if( (d_a > deactivation_threshold_ ) && !activation_enforced_ )
-      {
-        mc_rtc::log::info("[{}] Contact has been broken deactivate force control\nd_a {} d_b {}",name(),d_a,d_b);
-        auto & frame = task_b_->frame();
-        ctl.solver().removeTask(task_a_);
-        ctl.solver().removeTask(task_b_);
-        active_force_measurement_->reset(sva::ForceVecd::Zero());
-        active_force_measurement_ = nullptr;
-        contact_limb_ = "None";
-        indx_ = 0;
-        activation_enforced_ = false;
-        active_ = false;
-        return true;
-      }
+      mc_rtc::log::info("[{}] Contact has been broken deactivate force control\nd_a {} d_b {}",name(),d_a,d_b);
+      auto & frame = task_b_->frame();
+      ctl.solver().removeTask(task_a_);
+      ctl.solver().removeTask(task_b_);
+      active_force_measurement_->reset(sva::ForceVecd::Zero());
+      active_force_measurement_ = nullptr;
+      contact_limb_ = "None";
+      indx_ = 0;
+      activation_enforced_ = false;
+      active_ = false;
+      return true;
     }
-
-    sva::ForceVecd measured_wrench_a;
-    sva::ForceVecd measured_wrench_b;
-
-    if(task_a_->frame().hasForceSensor())
-    {
-      measured_wrench_a = task_a_->frame().wrench();
-      if(activation_enforced_)
-      {
-        auto indx = ctl.robot(robot_a_name_).data()->forceSensorsIndex["LeftHandForceSensor"];
-        //minus between frame and fs
-        ctl.robot(robot_a_name_).data()->forceSensors[indx].wrench(sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,0,20}));
-      }
-    
-    }
-    else
-    {
-      //if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in the mbc at the fb
-      const mc_rbdyn::Robot & robot_a = ctl.robot(robot_a_name_);
-      const auto X_0_fb = robot_a.posW();
-      const auto X_0_frame = task_a_->frame().position();
-      measured_wrench_a = (X_0_frame * X_0_fb.inv()).dualMul(robot_a.mbc().force[0]);
-      task_a_->setMeasuredWrench(measured_wrench_a);
-  
-    }
-    if(task_b_->frame().hasForceSensor()) 
-        // && task_b_->frame().forceSensor().name() != robot_b_custom_force_sensor_name_)
-    {
-      measured_wrench_b = task_b_->frame().wrench();
-    }
-    else
-    {
-      //if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in the mbc at the fb
-      
-      const mc_rbdyn::Robot & robot_b = ctl.robot(robot_b_name_);
-      const auto X_0_fb = ctl.robot(robot_b_name_).posW();
-      const auto X_0_frame = task_b_->frame().position();
-      measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( ctl.getCalibratedExtWrench(robot_b) );
-
-      if(activation_enforced_)
-      {
-        const sva::ForceVecd fake_wrench = 0*sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
-        measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
-        // const sva::ForceVecd fake_wrench = sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,0});
-        // measured_wrench_b = fake_wrench ;
-        // mc_rtc::log::info("fb is at {}",X_0_fb.translation());
-        // mc_rtc::log::info("task is at {}",X_0_frame.translation());
-      }
-
-      // const auto fs_indx = robot_b.data()->forceSensorsIndex[robot_b_custom_force_sensor_name_];
-      // robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_b);
-
-      task_b_->setMeasuredWrench(measured_wrench_b);
-    
-    }
-  
-    const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose( (indx_ == 1) ? 1 : 0 );
-    const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose( (indx_ == 1) ? 0 : 1 );
-
-    const sva::PTransformd X_f_contactF_a = h_b.getOffset(limb_b_) * h_b.getPose(limb_b_) * task_a_->frame().position().inv();
-    const sva::PTransformd X_f_contactF_b = h_a.getOffset(limb_a_) * h_a.getPose(limb_a_) * task_b_->frame().position().inv();
-
-    // mc_rtc::log::info("human_a is {}\nX_f_contactF_b trans {}",h_a.name(),X_f_contactF_b.translation());
-
-    const biRobotTeleop::RobotPose & robot_a_pose = indx_ == 1 ? ctl.r_1_ : ctl.r_2_ ;
-    const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_ ;
-
-
-    const sva::ForceVecd targetWrench_b = (X_f_contactF_b.inv() * robot_a_pose.getOffset(limb_a_)).dualMul(-measured_wrench_a) ;
-
-    const sva::ForceVecd targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_)).dualMul(-measured_wrench_b) ;
-
-    task_a_->targetWrench(targetWrench_a);
-    task_b_->targetWrench(targetWrench_b);
-
-    
   }
+
+  sva::ForceVecd measured_wrench_a;
+  sva::ForceVecd measured_wrench_b;
+
+  const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose( (indx_ == 1) ? 1 : 0 );
+  const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose( (indx_ == 1) ? 0 : 1 );
+
+  const sva::PTransformd X_f_contactF_a = h_b.getOffset(limb_b_) * h_b.getPose(limb_b_) * task_a_->frame().position().inv();
+  const sva::PTransformd X_f_contactF_b = h_a.getOffset(limb_a_) * h_a.getPose(limb_a_) * task_b_->frame().position().inv();
+
+  if(task_a_->frame().hasForceSensor())
+  {
+    measured_wrench_a = task_a_->frame().wrench();
+    if(activation_enforced_)
+    {
+      auto indx = ctl.robot(robot_a_name_).data()->forceSensorsIndex["LeftHandForceSensor"];
+      //minus between frame and fs
+      ctl.robot(robot_a_name_).data()->forceSensors[indx].wrench(sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,0,20}));
+    }
   
-  output("OK");
+  }
+
+
+  if(task_b_->frame().hasForceSensor() && task_b_->frame().forceSensor().name() != robot_b_custom_force_sensor_name_)
+  {
+    measured_wrench_b = task_b_->frame().wrench();
+  }
+  else
+  {
+    //if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in the mbc at the fb
+    
+    const mc_rbdyn::Robot & robot_b = ctl.robot(robot_b_name_);
+    const auto X_0_fb = ctl.robot(robot_b_name_).posW();
+
+    const auto R_fb_limb_a = sva::PTransformd(h_a.getOffset(limb_a_) * h_a.getPose(limb_a_).rotation()) 
+                             * sva::PTransformd(X_0_fb.rotation()).inv();
+    const auto X_0_frame = task_b_->frame().position();
+    const auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
+
+    measured_wrench_b = (X_f_contactF_b.inv()
+                         * R_fb_limb_a
+                         ).dualMul( sva::ForceVecd(Eigen::Vector3d::Zero(),wrench_fb.force()) );
+    
+    
+    // if(activation_enforced_)
+    // {
+    //   const sva::ForceVecd fake_wrench = 0*sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
+    //   measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
+    // }
+
+    const auto fs_indx = robot_b.data()->forceSensorsIndex.at(robot_b_custom_force_sensor_name_);
+    robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_b);
+
+    // task_b_->setMeasuredWrench(measured_wrench_b);
+  
+  }
+
+  // mc_rtc::log::info("human_a is {}\nX_f_contactF_b trans {}",h_a.name(),X_f_contactF_b.translation());
+
+  const biRobotTeleop::RobotPose & robot_a_pose = indx_ == 1 ? ctl.r_1_ : ctl.r_2_ ;
+  const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_ ;
+
+
+  const sva::ForceVecd targetWrench_b = (X_f_contactF_b.inv() * robot_a_pose.getOffset(limb_a_)).dualMul(-measured_wrench_a) ;
+
+  const sva::ForceVecd targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_)).dualMul(-measured_wrench_b) ;
+
+  task_a_->targetWrench(targetWrench_a);
+  task_b_->targetWrench(targetWrench_b);
+
+  
+
+  
   return true;
   
 }
@@ -205,7 +198,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
         mc_rtc::log::info("[{}] contact measured on frame {}, adding task",name(),f);
         task_a_= std::make_shared<mc_tasks::force::AdmittanceTask>(ctl.robots().robot(robot_name).frame(f));
         task_a_->load(ctl.solver(),config_(robot_name)("task"));
-        task_a_->velFilterGain(0);
+        task_a_->velFilterGain(0.9);
         task_a_->name(task_a_->name() + "_a");
         limb_a_ = limb;
         ctl.solver().addTask(task_a_);
@@ -220,15 +213,15 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
         contact_limb_ = biRobotTeleop::limb2Str(limb_b_);
         const std::string link = robot_indx == 1 ? ctl.r_2_.getName(limb_b_) : ctl.r_1_.getName(limb_b_);
         robot_b_custom_force_sensor_name_ = robot_b_name_ + "_" + contact_limb_;
-        // if(!robot_b.bodyHasForceSensor(link))
-        // {
-        //   mc_rbdyn::ForceSensor sensor = mc_rbdyn::ForceSensor(robot_b_custom_force_sensor_name_,link,sva::PTransformd::Identity());
-        //   robot_b.addForceSensor(sensor);
-        // }
+        if(!robot_b.bodyHasForceSensor(link))
+        {
+          mc_rbdyn::ForceSensor sensor = mc_rbdyn::ForceSensor(robot_b_custom_force_sensor_name_,link,sva::PTransformd::Identity());
+          robot_b.addForceSensor(sensor);
+        }
 
         task_b_= std::make_shared<mc_tasks::force::AdmittanceTask>(robot_b.frame(link));
         task_b_->load(ctl.solver(),config_(robot_b_name_)("task"));
-        task_b_->velFilterGain(0);
+        task_b_->velFilterGain(0.9);
         task_b_->name(task_b_->name() + "_b");
         ctl.solver().addTask(task_b_);
 

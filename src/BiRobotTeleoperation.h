@@ -96,6 +96,12 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return distant_human_indx_;
   }
 
+  const std::string getDistantRobotName() const noexcept
+  {
+    return robots().robot(getDistantHumanIndx()).name();
+  }
+
+
   /**
    * @brief Get the index of the human in front of the mainRobot of this controller 
    * 
@@ -153,6 +159,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
   {
     assert(external_wrench_calib_.size() > 1 );
     auto & ext_wrench = robot.mbc().force.at(0);
+
     auto & off = robot.name() == "robot_1" ? external_wrench_calib_[0] : external_wrench_calib_[1];
     return ext_wrench - off;
   }
@@ -170,6 +177,16 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
       external_wrench_calib_[1] = ext_wrench;
     }
     mc_rtc::log::info("External wrench calibrated on {} at {}",ext_wrench,robot.name());
+
+  }
+
+  sva::ForceVecd getExtWrenchGT(const mc_rbdyn::Robot & robot,const std::string & frame)
+  {
+    const auto & X_0_fb = robot.posW();
+    const auto & X_0_lh = robot.frame(frame).position();
+    const auto w_lh = robot.frame(frame).wrench();
+
+    return (X_0_fb * X_0_lh.inv()).dualMul(w_lh);
 
   }
 

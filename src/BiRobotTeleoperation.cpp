@@ -124,11 +124,13 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     external_wrench_calib_.push_back(sva::ForceVecd::Zero());
     logger().addLogEntry(robot.name() + "_ext_force_base",[this,&robot]() -> const sva::ForceVecd {return getCalibratedExtWrench(robot);});
   }
+  logger().addLogEntry("robot_1_ext_force_base_gt",[this]() -> const sva::ForceVecd {return getExtWrenchGT(realRobot("robot_1"),"LeftHand");} );
 
   if(global_config_.has("Franka"))
   {
     gui()->addElement({"Robots"},
-          mc_rtc::gui::Button("Reset robot_2",[this](){resetToRealRobot("robot_2");}));
+          mc_rtc::gui::Button("Reset robot_2",[this](){resetToRealRobot("robot_2");}),
+          mc_rtc::gui::Button("Reset robot_1",[this](){resetToRealRobot("robot_1");}));
     gui()->addElement({"Robots","External Wrench"},
           mc_rtc::gui::Button("Calibrate robot_1",[this](){CalibrateExtWrench(realRobot("robot_1"));}),
           mc_rtc::gui::ArrayLabel("robot_1 ext wrench",{"cx","cy","cz","fx","fy","fz"},

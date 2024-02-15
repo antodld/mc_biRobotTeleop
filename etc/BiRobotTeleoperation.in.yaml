@@ -22,7 +22,7 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4
+    module: HRP4::ImpactGrippers
   robot_2:
     module: PandaDefault
   human_1:
@@ -140,7 +140,7 @@ states:
   Human:
     base: Meta
     transitions:
-      - [Human::Trajectory,OK,Human::Free,Auto]
+      - [Human::ReachPose,OK,Human::Free,Auto]
 
   ChoiceMain:
     base: ChooseTransition
@@ -216,7 +216,7 @@ states:
     base: Parallel
     states:
       - Robot::Teleop
-      - Human::Free
+      - Human
       - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5

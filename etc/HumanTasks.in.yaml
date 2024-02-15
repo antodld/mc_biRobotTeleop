@@ -1,4 +1,4 @@
-  HumanHandTrajTasks:
+  Human_1_HandTrajTasks:
     base: MetaTasks
     tasks:
       Human_1_Left:
@@ -8,14 +8,21 @@
           frame: LHandLink
           stiffness: 100
           weight: 10
-          dimWeight: [0,0,0,1,1,1]
+          dimWeight: [1,1,1,1,1,1]
           unactiveJoints: ["Root"]
           targetFrame:
-            robot: robot_2
-            frame: R_SHOULDER_Y_S
-            translation: [0.,0.,0]
+            robot: human_1
+            frame: TorsoLink
+            translation: [0.,0.2,0.1]
+            rotation: [-1.57,0,0]
+          weight: 10
+          duration : 5
           completion:
             timeElapsed: true
+
+  Human_2_HandTrajTasks:
+    base: MetaTasks
+    tasks:
       Human_2_Right:
           type: bspline_trajectory
           name: Human_2_LeftHand
@@ -25,14 +32,21 @@
           targetFrame:
             robot: robot_1
             frame: L_SHOULDER_Y_LINK
-            translation: [0.,0.1,0]
+            translation: [0.,0.1,-0.15]
+            rotation: [0.,-1.57,-1.57]
             controlPoints: [[0,0.8,0]]
           stiffness: 100
-          dimWeight: [0,0,0,1,1,1]
+          dimWeight: [1,1,1,1,1,1]
           weight: 10
           duration : 5
           completion:
             timeElapsed: true
+  
+  Human::ReachPose:
+    base: Meta
+    ResetPostures: true
+    transitions:
+      - [Human_1_HandTrajTasks,OK,Human_2_HandTrajTasks,Auto]
 
   HumanHandTasks:
     base: MetaTasks

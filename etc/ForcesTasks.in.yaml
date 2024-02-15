@@ -2,16 +2,16 @@
     base: ForceTransmissionLocal
     integration_window: 5 #[s]
     force_activation_threshold: 10 #6d force norm
-    distance_activation_threshold: 0.01
-    deactivation_threshold: 0.05 #[m]
+    distance_activation_threshold: 0.0
+    deactivation_threshold: 1.05 #[m]
     robot_1:
       # force_sensor_limbs: ["LeftHand","RightHand"]
       force_sensor_limbs: []
       task:
         weight: 2000
         sitffness: 0
-        damping: 8
-        admittance: [0.01,0.01,0.01,0.01,0.01,0.01]
+        damping: 10
+        admittance: [0.05,0.05,0.0,0.0,0.0,0.0]
         # admittance: [0.0,0.,0.0,0.0,0.0,0.0]
         maxVel:
           angular: [0.5,0.5,0.5]
@@ -27,9 +27,9 @@
       task:
         weight: 2000
         sitffness: 0
-        damping: 8
-        admittance: [0.005,0.005,0.005,0.005,0.005,0.005]
+        damping: 10
+        admittance: [0.00,0.00,0.00,0.01,0.01,0.01]
         maxVel:
           angular: [1,1,1]
-          linear: [0.4,0.4,0.4]
+          linear: [1,1,1]
       force_sensor_limbs: ["RightHand"]

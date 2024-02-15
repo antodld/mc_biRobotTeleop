@@ -1,6 +1,7 @@
   GoHalfSitting_1:
     base: HalfSitting
     robot: robot_1
+    stiffness: 5
     eval: 0.1
 
   GoHalfSitting_2:

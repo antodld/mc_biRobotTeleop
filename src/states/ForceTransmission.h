@@ -66,7 +66,7 @@ struct ForceTransmission : mc_control::fsm::State
    * @param limb_human 
    * @return Eigen::Vector3d 
    */
-  Eigen::Vector3d getContactPose(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
+  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
 
 
   double getContactLimbDistance(mc_control::fsm::Controller & ctl_,const std::string & frame,const biRobotTeleop::Limbs limb) const;
@@ -87,6 +87,7 @@ struct ForceTransmission : mc_control::fsm::State
   std::vector<Eigen::Vector6d> received_e_r_in_;
   std::vector<Eigen::Vector6d> received_e_s_in_;
   std::shared_ptr<mc_tasks::force::AdmittanceTask> task_;
+  std::shared_ptr<mc_tasks::force::AdmittanceTask> task_distant_robot_;
 
   sva::MotionVecd vel_ = sva::MotionVecd::Zero();
 
@@ -120,14 +121,18 @@ struct ForceTransmission : mc_control::fsm::State
   mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
 
   std::string contact_limb_ = "None"; //human limb in contact with a robot link equipped of force sensors 
-  std::string robot_limb_ = "None"; //robot limb in contact 
+
+  std::string robot_custom_force_sensor_name_ = "";
+
+  biRobotTeleop::Limbs human_limb_; //human limb in contact with the robot 
+  biRobotTeleop::Limbs robot_limb_; //robot limb in contact 
   std::vector<std::string> force_sensor_limbs_;
 
   sva::ForceVecd measured_force_ = sva::ForceVecd::Zero(); //measured force in the link frame unified according to robotPose offsets
 
-  biRobotTeleop::RobotPose robotPose_;
+  double force_activation_threshold_ = 10; //force threshold on which the force control is activated;
+  double distance_activation_threshold_ = 10; //force threshold on which the force control is activated;
 
-  double activation_threshold_ = 10; //force threshold on which the force control is activated;
   double deactivation_threshold_ = 0.15; //distance threshold on which the force control is deactivated
 
 };
