@@ -55,7 +55,7 @@ struct ForceTransmission : mc_control::fsm::State
 
   void resetEnergyState();
 
-  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const std::string & frame) const;
+  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs & frame) const;
 
   /**
    * @brief Get the contact location on the robot indx limb, it suppose contact exist
@@ -66,10 +66,8 @@ struct ForceTransmission : mc_control::fsm::State
    * @param limb_human 
    * @return Eigen::Vector3d 
    */
-  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
+  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human) const;
 
-
-  double getContactLimbDistance(mc_control::fsm::Controller & ctl_,const std::string & frame,const biRobotTeleop::Limbs limb) const;
 
   double dt_ = 5e-3;
   std::string receiver_name_ = "";

@@ -196,7 +196,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
         activation_enforced_ = force_activation[filter_indx];
         //Once a force sensor is in contact, we set the limb in contact and activate the force task;
         mc_rtc::log::info("[{}] contact measured on frame {}, adding task",name(),f);
-        task_a_= std::make_shared<mc_tasks::force::AdmittanceTask>(ctl.robots().robot(robot_name).frame(f));
+        task_a_= std::make_shared<mc_tasks::force::DampingTask>(ctl.robots().robot(robot_name).frame(f));
         task_a_->load(ctl.solver(),config_(robot_name)("task"));
         task_a_->velFilterGain(0.9);
         task_a_->name(task_a_->name() + "_a");
@@ -208,7 +208,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
 
         robot_b_name_ = (robot_a_name_ == "robot_1") ? "robot_2" : "robot_1";
 
-        limb_b_ = getContactLimb(ctl,robot_indx,f);
+        limb_b_ = getContactLimb(ctl,robot_indx,limb);
         mc_rbdyn::Robot & robot_b = ctl.robots().robot(robot_b_name_);
         contact_limb_ = biRobotTeleop::limb2Str(limb_b_);
         const std::string link = robot_indx == 1 ? ctl.r_2_.getName(limb_b_) : ctl.r_1_.getName(limb_b_);
@@ -219,7 +219,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
           robot_b.addForceSensor(sensor);
         }
 
-        task_b_= std::make_shared<mc_tasks::force::AdmittanceTask>(robot_b.frame(link));
+        task_b_= std::make_shared<mc_tasks::force::DampingTask>(robot_b.frame(link));
         task_b_->load(ctl.solver(),config_(robot_b_name_)("task"));
         task_b_->velFilterGain(0.9);
         task_b_->name(task_b_->name() + "_b");
@@ -241,7 +241,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
 }
 
 
-const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fsm::Controller & ctl_,const int robot_indx,const std::string & frame) const
+const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs & robot_limb) const
 {
 
   biRobotTeleop::Limbs output_limb = biRobotTeleop::Head;
@@ -250,8 +250,9 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
   for (int int_limb = 1 ; int_limb <= biRobotTeleop::Limbs::RightArm ; int_limb++)
   {
     const auto limb = static_cast<biRobotTeleop::Limbs>(int_limb);
+    if(limb == biRobotTeleop::Limbs::Pelvis || limb == biRobotTeleop::Limbs::Head){continue;}
 
-    auto d = getContactLimbDistance(ctl_,robot_indx,frame,limb);
+    const auto d = getContactDistance(ctl_,robot_indx,robot_limb,limb).norm();
 
     if(d < min_d)
     {
@@ -259,37 +260,16 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
       min_d = d;
     }
   }
+  mc_rtc::log::info("robot checked is robot_{},min distance is {}",robot_indx , min_d);
   return output_limb;
 
 }
 
-double ForceTransmissionLocal::getContactLimbDistance(mc_control::fsm::Controller & ctl_,const int robot_indx,const std::string & frame,const biRobotTeleop::Limbs limb) const
-{
-  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
-  
-  const sva::PTransformd & X_0_frame = ctl_.robots().robot("robot_" + std::to_string(robot_indx)).frame(frame).position();
-  const auto p_frame = X_0_frame.translation();
-  const auto & h = ctl.getHumanPose(robot_indx % 2);
 
-
-  sch::S_Sphere sphere(0.01);
-  sphere.setPosition(p_frame.x(),p_frame.y(),p_frame.z());
-  
-  auto cvx = h.getConvex(limb);
-  
-  sch::CD_Pair pair_limb_frame(&cvx,&sphere);
-
-  sch::Point3 p1, p2;
-  pair_limb_frame.getClosestPoints(p1,p2);
-
-  return (p1 - p2).norm();
-
-}
-
-Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
+const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
                                                        const int robot_indx,
                                                        const biRobotTeleop::Limbs limb_robot,
-                                                       const biRobotTeleop::Limbs limb_human)
+                                                       const biRobotTeleop::Limbs limb_human) const
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const std::string robot_name = "robot_" + std::to_string(robot_indx);

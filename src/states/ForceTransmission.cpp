@@ -82,6 +82,7 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
       if(activation_force_measurements_[filter_indx].eval().vector().norm() > force_activation_threshold_ || 
          d_pair.first < distance_activation_threshold_ ) 
       {
+        robot_limb_ = limb;
         //Once a force sensor is in contact, we set the limb in contact and activate the force task;
         if( d_pair.first < distance_activation_threshold_)
         { 
@@ -92,10 +93,9 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
         else
         {
           active_force_measurement_ = &activation_force_measurements_[filter_indx];
-          human_limb_ = getContactLimb(ctl,frame_name) ;
+          human_limb_ = getContactLimb(ctl,robot_limb_) ;
         } 
-        robot_limb_ = limb;
-
+        
         mc_rtc::log::info("[{}] adding task",name(),frame_name);
 
         const std::string distant_robot_frame = ctl.getRobotPose(ctl.getDistantHumanIndx()).getName(human_limb_);
@@ -146,7 +146,7 @@ bool ForceTransmission::run(mc_control::fsm::Controller & ctl_)
   auto vel_h_frame = X_0_h_limb * X_0_frame.inv() * task_->frame().velocity();
   
 
-  double d = getContactLimbDistance(ctl_,task_->frame().name(),human_limb_); 
+  const double d = getContactDistance(ctl_,robot_limb_,human_limb_).norm(); 
   bool force_deactivate = false;
   if(active_force_measurement_ != nullptr)
   {
@@ -289,7 +289,7 @@ void ForceTransmission::updateEnergyState(Eigen::Vector6d & energy,const sva::Fo
 
 }
 
-const biRobotTeleop::Limbs ForceTransmission::getContactLimb(mc_control::fsm::Controller & ctl_,const std::string & frame) const
+const biRobotTeleop::Limbs ForceTransmission::getContactLimb(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs & robot_limb) const
 {
 
   biRobotTeleop::Limbs output_limb = biRobotTeleop::Head;
@@ -297,9 +297,11 @@ const biRobotTeleop::Limbs ForceTransmission::getContactLimb(mc_control::fsm::Co
 
   for (int int_limb = 1 ; int_limb <= biRobotTeleop::Limbs::RightArm ; int_limb++)
   {
-    const auto limb = static_cast<biRobotTeleop::Limbs>(int_limb);
 
-    auto d = getContactLimbDistance(ctl_,frame,limb);
+    const auto limb = static_cast<biRobotTeleop::Limbs>(int_limb);
+    if(limb == biRobotTeleop::Limbs::Pelvis || limb == biRobotTeleop::Limbs::Head){continue;}
+  
+    auto d = getContactDistance(ctl_,robot_limb,limb).norm();
 
     if(d < min_d)
     {
@@ -311,32 +313,10 @@ const biRobotTeleop::Limbs ForceTransmission::getContactLimb(mc_control::fsm::Co
 
 }
 
-double ForceTransmission::getContactLimbDistance(mc_control::fsm::Controller & ctl_,const std::string & frame,const biRobotTeleop::Limbs limb) const
-{
-  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
-
-  const sva::PTransformd & X_0_frame = ctl_.robot().frame(frame).position();
-  const auto p_frame = X_0_frame.translation();
-  const auto & h = ctl.getHumanPose(ctl.getHumanIndx());
-
-
-  sch::S_Sphere sphere(0.01);
-  sphere.setPosition(p_frame.x(),p_frame.y(),p_frame.z());
-  
-  auto cvx = h.getConvex(limb);
-  
-  sch::CD_Pair pair_limb_frame(&cvx,&sphere);
-
-  sch::Point3 p1, p2;
-  pair_limb_frame.getClosestPoints(p1,p2);
-
-  return (p1 - p2).norm();
-
-}
 
 Eigen::Vector3d ForceTransmission::getContactDistance(mc_control::fsm::Controller & ctl_,
                                                        const biRobotTeleop::Limbs limb_robot,
-                                                       const biRobotTeleop::Limbs limb_human)
+                                                       const biRobotTeleop::Limbs limb_human) const
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   auto & robot = ctl.robots().robot();

@@ -2,6 +2,7 @@
 
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/AdmittanceTask.h>
+#include <mc_tasks/DampingTask.h>
 #include <mc_rtc/gui/Input.h>
 #include <mc_rtc/gui/Checkbox.h>
 #include <mc_tasks/TransformTask.h>
@@ -23,9 +24,15 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   void addLog(mc_control::fsm::Controller & ctl);
 
-  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const int robot_indx,const std::string & frame) const;
-
-  double getContactLimbDistance(mc_control::fsm::Controller & ctl_,const int robot_indx,const std::string & frame,const biRobotTeleop::Limbs limb) const;
+  /**
+   * @brief Compute the human contact limb with robot limb
+   * 
+   * @param ctl_ 
+   * @param robot_indx 
+   * @param robot_limb 
+   * @return const biRobotTeleop::Limbs 
+   */
+  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs & robot_limb) const;
 
   /**
    * @brief Get the contact location on the robot indx limb, it suppose contact exist
@@ -36,17 +43,17 @@ struct ForceTransmissionLocal : mc_control::fsm::State
    * @param limb_human 
    * @return Eigen::Vector3d 
    */
-  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human);
+  const Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const int robot_indx,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human) const;
 
   bool checkActivation(mc_control::fsm::Controller & ctl_,const int robot_indx);
 
   double dt_ = 5e-3;
   
-  std::shared_ptr<mc_tasks::force::AdmittanceTask> task_a_;
-  std::shared_ptr<mc_tasks::force::AdmittanceTask> task_b_;
+  std::shared_ptr<mc_tasks::force::DampingTask> task_a_;
+  std::shared_ptr<mc_tasks::force::DampingTask> task_b_;
 
-  std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_2_;
-  std::shared_ptr<mc_tasks::force::AdmittanceTask> task_robot_1_;
+  std::shared_ptr<mc_tasks::force::DampingTask> task_robot_2_;
+  std::shared_ptr<mc_tasks::force::DampingTask> task_robot_1_;
 
   std::string robot_b_custom_force_sensor_name_;
 
