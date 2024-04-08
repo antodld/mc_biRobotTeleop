@@ -60,7 +60,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
     }
     else
     {
-        human_sim_rec_.init("human", "human" ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
+        human_sim_rec_.init("receiver " + name(),"human_", "human" ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
                                               "tcp://" + ip_ + ":" + std::to_string(sub_port_));
         human_sim_rec_.setSimulatedDelay(0);
     }
@@ -81,30 +81,32 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                         [this](const Eigen::Vector3d & rpy) {
                         X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.);
                         }));
-    
-    gui.addElement({"States",name(), "Robot sensor offset"},mc_rtc::gui::Transform("Expected robot sensor pose",[this,&ctl_]() -> sva::PTransformd
-                                                                                    {
-                                                                                        mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
-                                                                                        const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
-                                                                                        return X_link_sensor_ * X_0_RobotLink;
-                                                                                    }));
-    gui.addElement({"States",name(), "Robot sensor offset","Calibration"},mc_rtc::gui::Button("Calibrate",[this,&ctl]() {calibrateSensorPose(ctl,calibration_robot_link_,calibration_device_);}));
-    gui.addElement({"States",name(), "Robot sensor offset","Calibration"},mc_rtc::gui::Transform("Calibration Frame",[this]() -> const sva::PTransformd & { return X_0_calibTarget_;}));
+    if(!human_sim_)
+    {   
+        gui.addElement({"States",name(), "Robot sensor offset"},mc_rtc::gui::Transform("Expected robot sensor pose",[this,&ctl_]() -> sva::PTransformd
+                                                                                        {
+                                                                                            mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
+                                                                                            const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
+                                                                                            return X_link_sensor_ * X_0_RobotLink;
+                                                                                        }));
+        gui.addElement({"States",name(), "Robot sensor offset","Calibration"},mc_rtc::gui::Button("Calibrate",[this,&ctl]() {calibrateSensorPose(ctl,calibration_robot_link_,calibration_device_);}));
+        gui.addElement({"States",name(), "Robot sensor offset","Calibration"},mc_rtc::gui::Transform("Calibration Frame",[this]() -> const sva::PTransformd & { return X_0_calibTarget_;}));
 
-    gui.addElement(this, {"States",name(), "Robot sensor offset","Calibration","offset Calib Target"},
+        gui.addElement(this, {"States",name(), "Robot sensor offset","Calibration","offset Calib Target"},
 
-                    mc_rtc::gui::ArrayInput(
-                        "translation [m]", {"x", "y", "z"},
-                        [this]() -> const Eigen::Vector3d & { return link_calib_offset_.translation(); },
-                        [this](const Eigen::Vector3d & t) { link_calib_offset_.translation() = t; }),
-                    mc_rtc::gui::ArrayInput(
-                        "rotation [deg]", {"r", "p", "y"},
-                        [this]() -> Eigen::Vector3d {
-                        return mc_rbdyn::rpyFromMat(link_calib_offset_.rotation()) * 180. / mc_rtc::constants::PI;
-                        },
-                        [this](const Eigen::Vector3d & rpy) {
-                        link_calib_offset_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.);
-                        }));
+                        mc_rtc::gui::ArrayInput(
+                            "translation [m]", {"x", "y", "z"},
+                            [this]() -> const Eigen::Vector3d & { return link_calib_offset_.translation(); },
+                            [this](const Eigen::Vector3d & t) { link_calib_offset_.translation() = t; }),
+                        mc_rtc::gui::ArrayInput(
+                            "rotation [deg]", {"r", "p", "y"},
+                            [this]() -> Eigen::Vector3d {
+                            return mc_rbdyn::rpyFromMat(link_calib_offset_.rotation()) * 180. / mc_rtc::constants::PI;
+                            },
+                            [this](const Eigen::Vector3d & rpy) {
+                            link_calib_offset_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.);
+                            }));
+    }
 
 }
 
@@ -118,6 +120,16 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
 
     if(ctl.robots().hasRobot("human_1"))
     {   
+        output("True");
+        return true;
+    }
+
+    if(ctl.hp_rec_.online() && robot_name_ != ctl.robot().name())
+    {
+        if(human_sim_)
+        {
+            human_sim_rec_.deactivate();
+        }
         output("True");
         return true;
     }
@@ -208,14 +220,14 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         }
     }
     
-    else if(human_sim_ && human_sim_rec_.getRobot().name() == "human")
+    if(human_sim_ && human_sim_rec_.getRobot().name() == "human")
     {
         const mc_rbdyn::Robot & human_robot = human_sim_rec_.getRobot();
-        // mc_rtc::log::info("here");
         ctl.updateHumanPose(human_robot,h);
     }
-   
+
     output("True");
+
     return false;
  
 }

@@ -73,16 +73,19 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   int server_pub_port = config("server")("sub_port");
   int server_sub_port = config("server")("pub_port");
-  std::string server_ip = config("server")("ip");
-  server_.reset(new mc_control::ControllerServer(dt, dt, {"ipc:///tmp/hp_server_pub.ipc","tcp://"+ server_ip + ":" + std::to_string(server_pub_port)},
-                                                         {"ipc:///tmp/hp_server_rep.ipc","tcp://"+ server_ip + ":" + std::to_string(server_sub_port)})
-                                                         );
-  
+
   config("distant_controller")("ip",ip_);
   config("distant_controller")("pub_port",pub_port_);
   config("distant_controller")("sub_port",sub_port_);
   config("distant_controller")("human_name",distant_human_name_);
   config("local_controller")("human_name",local_human_name_);
+
+
+  std::string server_ip = config("server")("ip");
+  server_.reset(new mc_control::ControllerServer(dt, dt, {"ipc:///tmp/hp_" + robot().name() + "_server_pub.ipc","tcp://"+ server_ip + ":" + std::to_string(server_pub_port)},
+                                                         {"ipc:///tmp/hp_" + robot().name() +" _server_rep.ipc","tcp://"+ server_ip + ":" + std::to_string(server_sub_port)})
+                                                         );
+  
 
   if(distant_human_name_ == "human_2")
   {
@@ -105,13 +108,13 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   distant_robot_name_ = (robot().name() == "robot_1") ? "robot_2" : "robot_1";
 
-  hp_rec_.init(distant_human_name_, distant_robot_name_ ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
+  hp_rec_.init("receiver main",distant_human_name_, distant_robot_name_ ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
                         "tcp://" + ip_ + ":" + std::to_string(sub_port_));
 
   hp_rec_.setSimulatedDelay(0);
 
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
-  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("robot",[this]() -> const mc_rbdyn::Robot & {return robot(); }));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg(robot().name(),[this]() -> const mc_rbdyn::Robot & {return robot(); }));
   if(robots().robot("robot_2").module().name == "panda_default")
   {
     gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("panda_robot",[this]() -> const mc_rbdyn::Robot & {return robots().robot("robot_2"); }));
@@ -142,18 +145,18 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     );
   }
 
-  for (auto & f : robots().robot("robot_2").frames())
-  {
-    mc_rtc::log::info("panda frame {}",f);
-  }  
-  for (auto & c : robots().robot("robot_2").convexes())
-  {
-    mc_rtc::log::info("convex name {}",c.first);
-  }
-  for (auto & c : robots().robot("robot_1").convexes())
-  {
-    mc_rtc::log::info("robot_1 convex name {}",c.first);
-  }
+  // for (auto & f : robots().robot("robot_2").frames())
+  // {
+  //   mc_rtc::log::info("panda frame {}",f);
+  // }  
+  // for (auto & c : robots().robot("robot_2").convexes())
+  // {
+  //   mc_rtc::log::info("convex name {}",c.first);
+  // }
+  // for (auto & c : robots().robot("robot_1").convexes())
+  // {
+  //   mc_rtc::log::info("robot_1 convex name {}",c.first);
+  // }
 
   if(!datastore().has("Replay::Log"))
   {
@@ -161,7 +164,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     addReplayLog(1);
   }
 
-  if(global_config_.has("Franka"))
+  if(global_config_.has("Franka") && (robot("robot_1").module().name == "panda" || robot("robot_2").module().name == "panda" ) )
   {
     if(global_config_("Franka")("ControlMode") == "Torque")
     {
@@ -210,7 +213,7 @@ bool BiRobotTeleoperation::run()
   }
 
   //Panda Close Loop
-  if(global_config_.has("Franka"))
+  if(global_config_.has("Franka") && (robot("robot_1").module().name == "panda" || robot("robot_2").module().name == "panda" ) )
   {
     if(global_config_("Franka")("ControlMode") == "Torque")
     {
@@ -259,7 +262,6 @@ bool BiRobotTeleoperation::run()
   }
 
   server_->publish(gui_builder_);
-  hp_rec_.runAndUpdate();
 
   ctl_count_++;
 
