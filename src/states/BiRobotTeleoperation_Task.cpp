@@ -41,6 +41,7 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_2")("name",r2_name_);
   state_config_("robot_1")("links",r1_linksName);
   state_config_("robot_2")("links",r2_linksName);
+  state_config_("stiffness",stiffness_);
 
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
@@ -109,6 +110,18 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   addToLogger(ctl_);
 
   ctl.gui()->addElement({"States",name()},mc_rtc::gui::Checkbox("Use Estimated Human",[this]()->bool {return useEstimatedHuman_;},[this](){useEstimatedHuman_ = !useEstimatedHuman_;}));
+  ctl.gui()->addElement({"States",name()},mc_rtc::gui::NumberInput("Tasks stiffness",[this]()->double {return stiffness_;},
+                                          [this](const double s)
+                                          {
+                                            stiffness_ =s;
+                                            for(auto & t : biTasks_)
+                                            {
+                                              t->stiffness(s);
+                                            }
+                                          }
+                                          )
+                                  );
+
 
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);

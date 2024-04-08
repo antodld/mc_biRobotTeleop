@@ -74,6 +74,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
       h_target.setPose(limb,h.getPose(limb));
       h_target.setVel(limb,h.getVel(limb));
       h_target.setAcc(limb,h.getAcc(limb));
+      h_target.setLimbActiveState(limb,h.limbActive(limb));
     }
   }
 

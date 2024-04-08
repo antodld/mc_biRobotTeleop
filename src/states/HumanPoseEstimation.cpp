@@ -110,9 +110,13 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     auto ext_robots =  ctl.external_robots_;
     mc_rbdyn::Robot & human = ext_robots.get()->robot(humanRobot_name_);
 
-    const biRobotTeleop::HumanPose & h = h_measured_thread_;
+    {
+        std::lock_guard<std::mutex> lk_copy_state(mutex_copy_);
+        ctl.updateHumanPose(h_measured_,h_measured_thread_);
+        h_measured_thread_.setOffset(h_measured_.getOffset());
+    }
 
-    h_estimated_.setOffset(h.getOffset());
+    const biRobotTeleop::HumanPose & h = h_measured_thread_;
 
     std::vector<double> dot_q_vec;
     for (auto & j : human.alpha())
@@ -128,6 +132,7 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     task_weight_.clear();
     for(auto & limb : target_limbs_)
     {
+        if(!h.limbActive(limb) || !h.limbActive(biRobotTeleop::Limbs::Pelvis)){return;}
         const sva::PTransformd offset = h.getOffset(limb);
         addTransformTask(human,humanRobot_links_.getName(limb), 
                         offset * h.getPose(limb),
@@ -157,20 +162,18 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     human.forwardKinematics();
     human.forwardVelocity();
     human.forwardAcceleration();
-    
+
     {
         std::lock_guard<std::mutex> lk_copy_state(mutex_copy_);
-        ctl.updateHumanPose(h_measured_,h_measured_thread_);
-        h_measured_thread_.setOffset(h_measured_.getOffset());
         for(int i = 0 ; i <= biRobotTeleop::Limbs::RightArm ; i++ )
         {
             const auto limb = static_cast<biRobotTeleop::Limbs>(i);
             const auto link = humanRobot_links_.getName(limb);
             set_estimated_values(human,link,limb);
-
+            h_estimated_.setOffset(h.getOffset());
         }
     }
-
+    
     if( ctl.useRos() )
     {
         mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_),dt_,human);
@@ -268,7 +271,7 @@ Eigen::VectorXd HumanPoseEstimation::solve()
 
     if (task_mat_.size() == 0)
     {
-        mc_rtc::log::critical("No tasks provided");
+        mc_rtc::log::critical("[{}, solver] No tasks provided",name());
     }
     const int nvar = task_mat_[0].cols();
     Eigen::VectorXd qdd = Eigen::VectorXd::Zero(nvar);

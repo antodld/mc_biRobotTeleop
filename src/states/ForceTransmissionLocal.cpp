@@ -49,7 +49,7 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   output("OK");
-
+  
   if(!active_) //if not active, look if the force sensors measure a contact
   {
     checkActivation(ctl_,1);
@@ -67,9 +67,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
     active_force_measurement_->update(task_a_->frame().wrench());
 
-    if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
-        d_a > deactivation_threshold_) && !activation_enforced_)
-    // if( (d_a > deactivation_threshold_ ) && !activation_enforced_ )
+    // if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
+    //     d_a > deactivation_threshold_) && !activation_enforced_)
+    if( (d_a > deactivation_threshold_ ) && !activation_enforced_ )
     {
       mc_rtc::log::info("[{}] Contact has been broken deactivate force control\nd_a {} d_b {}",name(),d_a,d_b);
       auto & frame = task_b_->frame();

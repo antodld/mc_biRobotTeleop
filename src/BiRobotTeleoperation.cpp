@@ -96,8 +96,8 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   if(config("local_controller")("display_human_pose"))
   {
-    hp_1_.addPoseToGUI(*gui().get());
-    hp_2_.addPoseToGUI(*gui().get());
+    hp_1_.addPoseToGUI(*gui().get(),false);
+    hp_2_.addPoseToGUI(*gui().get(),false);
     
     hp_1_.addOffsetToGUI(*gui().get());
     hp_2_.addOffsetToGUI(*gui().get());

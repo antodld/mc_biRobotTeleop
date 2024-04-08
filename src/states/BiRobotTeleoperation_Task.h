@@ -19,8 +19,6 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
 
   void teardownLogger(mc_control::fsm::Controller & ctl);
 
-  std::shared_ptr<mc_tasks::biRobotTeleopTask> biTask_;
-
   std::vector<std::shared_ptr<mc_tasks::biRobotTeleopTask>> biTasks_;
 
   std::vector<biRobotTeleop::Limbs> r1_links_ = {};
@@ -32,6 +30,7 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
   mc_rtc::Configuration state_config_;
 
   double weight_ = 10;
+  double stiffness_ = 0;
   double minDist_ = 0;
   double softMaxGain_ = 10;
   double deltaDistGain_ = 1;

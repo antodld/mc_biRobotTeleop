@@ -248,17 +248,16 @@ void HumanPose::calibrateSensorPose(mc_control::fsm::Controller & ctl_ ,const st
 
             
     const sva::PTransformd X_0_robotTracker = (has_tracker_func(robot_device_) && tracker_online_func(robot_device_)) ? 
-                                                tracker_pose_func(robot_device_) : sva::PTransformd::Identity();
+                                                tracker_pose_func(robot_device_) : sva::PTransformd::Identity(); //Vive tracker on the robot
 
     const auto X_0_RobotRefLink = robot.bodyPosW(robot_link_);
-    const auto X_0_RobotLink = link_calib_offset_ * robot.frame(robot_link).position();
+    const auto X_0_RobotLink = link_calib_offset_ * robot.frame(robot_link).position(); 
 
 
     if(has_tracker_func(device) && tracker_online_func(device))
     {
-        X_0_calibTarget_ = X_0_RobotLink;
+        X_0_calibTarget_ = X_0_RobotLink; //Where the calib sensor should be placed
 
-        const sva::PTransformd offset = h.getOffset(human_deviceTolimbs_.at(device));
         const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device);
         const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
       
