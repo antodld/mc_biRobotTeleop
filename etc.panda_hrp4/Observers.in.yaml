@@ -1,0 +1,56 @@
+ObserverPipelines:
+  - name: ObserverPipeline_robot_1
+    gui: true
+    observers:
+      - type: Encoder
+        robot: robot_1
+        update_robot: robot_1
+      - type: Attitude
+        robot: robot_1
+        update_robot: robot_1
+        required: true
+        update: true
+      - type: KinematicInertial
+        robot: robot_1
+        update_robot: robot_1
+        update: true
+        config:
+          cutoff: 0.02
+          anchorFrame:
+            maxAnchorFrameDiscontinuity: 0.02
+      - type: Tilt
+        update: true
+        robot: robot_1
+        config:
+          robot: robot_1
+          asBackup: true
+          odometryType: 6D 
+          velUpdatedUpstream: false
+          accUpdatedUpstream: false
+          contactsDetection: Surfaces
+          surfacesForContactDetection: [RightFootCenter, LeftFootCenter] # [LeftHandForceSensor]
+      - type: MCKineticsObserver
+        update: true
+        robot: robot_1
+        config:
+          robot: robot_1
+          contactsDetection: Surfaces
+          surfacesForContactDetection: [RightFootCenter, LeftFootCenter] # [LeftHandForceSensor]
+          backupInterval: 1
+          odometryType: 6D  # None # 6D # Flat
+          updateExtWrench: true
+          withUnmodeledWrench: true
+      # - type: ContactEstimation
+      #   config:
+      #     robot: robot_1
+      #     force_sensors: [LeftFoot,RightFoot]
+      #     gainInt: 5
+      #     gainExt: 5
+      #     set_value_at_fb: true
+  - name: ObserverPipeline_robot_2
+    gui: true
+    observers:
+      - type: Encoder
+        robot: robot_2
+        update_robot: robot_2
+

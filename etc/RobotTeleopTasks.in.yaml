@@ -21,89 +21,52 @@
       frame: L_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 10
+      stiffness: 5
+    completion_eval: 1e4
 
   RobotArm_2:
     base: RobotArm_1
     robot_name: robot_2
     human_indx: 1
     human_targetLimb: RightArm
-    robot_refFrame: panda_link0
+    robot_refFrame: BODY
     human_robot_RefTransfo: 
-      translation: [-0.15,0.,-0.4]
+      translation: [0.,0.,0.]
       rotation: [0.,0.,0.]
     human_robot_TargetTransfo: 
       translation: [0.,0.,0.]
-      rotation: [1.57,0,3.14]
+      rotation: [0,0.,0.]
     task:
-      unactiveJoints: []
-      frame: panda_link4
-      dimWeight: [1,1,1,1,1,1]   
+      type: transform
+      unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
+      frame: R_SHOULDER_Y_LINK
+      dimWeight: [1,1,1,0,0,0]   
+      weight: 200
+      stiffness: 100 
     
-  BiTeleop_RobotArm_1:
+      
+  RobotForearm_1:
     base: RobotArm_1
-    completion_eval: 1e4
-
-  
-  BiTeleop_RobotArm_2:
-    base: RobotArm_2
-    completion_eval: 1e4
-
-    
-  BiTeleop_RobotForearm_1:
-    base: BiTeleop_RobotArm_1
     human_targetLimb: LeftForearm
     task:
       frame: L_ELBOW_P_LINK
   
-  BiTeleop_RobotForearm_2:
-    base: BiTeleop_RobotArm_2
+  RobotForearm_2:
+    base: RobotArm_2
     human_targetLimb: RightForearm
     task:
-      frame: panda_link6
+      frame: R_ELBOW_Y_LINK
 
-  BiTeleop_RobotHand_1:
-    base: BiTeleop_RobotArm_1
+  RobotHand_1:
+    base: RobotArm_1
     human_targetLimb: LeftHand
     task:
       frame: l_wrist
   
-  BiTeleop_RobotHand_2:
-    base: BiTeleop_RobotArm_2
+  RobotHand_2:
+    base: RobotArm_2
     human_targetLimb: RightHand
     task:
-      frame: panda_link8
+      frame: R_WRIST_Y_LINK
     
-  PandaPosture:
-    base: MetaTasks
-    tasks:
-      # PandaPosture:
-      #   type: posture
-      #   robot: robot_2
-      #   dimWeight: [0,1,0,0,0,0,0]
-      #   weight: 50
-      #   target: 
-      #     panda_joint1: [0]
-      #     panda_joint2: [1]
-      #     panda_joint3: [0]
-      #     panda_joint4: [0]
-      #     panda_joint5: [0]
-      #     panda_joint6: [0]
-      #     panda_joint7: [0]
-      #   completion:
-      #     eval: 1e3
-      PandaLinkPose:
-        type: transform
-        frame: panda_link4
-        robot: robot_2
-        dimWeight: [0,0,0,0,0,1]
-        weight: 20
-        stiffness: 10
-        targetFrame:
-          robot: robot_2
-          frame: panda_link4
-          offset:
-            translation: [0., 0., -0.1]
-            rotation: [0.0, 0.0, 0.0]
-
   

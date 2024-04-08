@@ -7,7 +7,7 @@
    task:
     type: transform
     unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
-    frame: LeftHandWrench 
+    frame: LeftHand 
     dimWeight: [0,0,0,1,1,1]   
     weight: 30
     damping: 100
@@ -49,7 +49,7 @@
     human_targetLimb: LeftForearm
     task:
       name: Damping_Robot_1_LefForearm
-      frame: L_ELBOW_Y_LINK
+      frame: L_ELBOW_P_LINK
 
   BiTeleop_Damping_2_Forearm:
     base: BiTeleop_Damping_2_Hand

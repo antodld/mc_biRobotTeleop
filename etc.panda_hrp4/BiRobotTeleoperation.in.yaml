@@ -22,13 +22,13 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4
+    module: HRP4::ImpactGrippers
   robot_2:
-    module: RHPS1
-  # human_1:
-  #   module: human
-  # human_2:
-  #   module: human
+    module: PandaDefault
+  human_1:
+    module: human
+  human_2:
+    module: human
 
 @mc_humanMap.yaml
 #HumanMap.yaml
@@ -44,8 +44,8 @@ constraints:
 - type: kinematics
   robot: robot_1
   damper: [0.1, 0.01, 0.5]
-# - type: dynamics
-#   robot: robot_2
+- type: dynamics
+  robot: robot_2
 # Collision constraint
 collisions:
 - type: collision
@@ -56,6 +56,30 @@ collisions:
   r1: robot_2
   r2: robot_2
   useMinimal: true
+- type: collision
+  r1: ground
+  r2: robot_2
+  collisions:
+    - body1: ground
+      body2: panda_link8*
+      iDist: 0.02
+      sDist: 0.005
+      damping: 0
+    - body1: ground
+      body2: panda_link7*
+      iDist: 0.02
+      sDist: 0.005
+      damping: 0
+    - body1: ground
+      body2: panda_link6*
+      iDist: 0.02
+      sDist: 0.005
+      damping: 0
+    - body1: ground
+      body2: panda_link5*
+      iDist: 0.02
+      sDist: 0.005
+      damping: 0
 
 contacts:
 - r2: ground
@@ -64,14 +88,6 @@ contacts:
   r2Surface: AllGround
 - r2: ground
   r1: robot_1
-  r1Surface: RightFoot
-  r2Surface: AllGround
-- r2: ground
-  r1: robot_2
-  r1Surface: LeftFoot
-  r2Surface: AllGround
-- r2: ground
-  r1: robot_2
   r1Surface: RightFoot
   r2Surface: AllGround
 
@@ -99,7 +115,7 @@ OpenVRPlugin:
   # - ["Pelvis_human_2","LHR-D756B287"]
   - ["Pelvis_human_2","LHR-E488461D"]
   - ["Robot_HRP4","LHR-A108F2F9"]
-  - ["Robot_RHPS1","LHR-659508D3"]
+  - ["Robot_Panda","LHR-659508D3"]
   sleep: 10 #ms
   localData: true
   distantData:
@@ -183,12 +199,12 @@ states:
   Robot::Teleop:
     base: Parallel
     states:
-    - RobotArm_1
-    - RobotArm_2
-    - RobotForearm_1
-    - RobotForearm_2
-    - RobotHand_1
-    - RobotHand_2
+    - BiTeleop_RobotArm_1
+    # - BiTeleop_RobotArm_2
+    # - BiTeleop_RobotForearm_1
+    # - BiTeleop_RobotForearm_2
+    - BiTeleop_RobotHand_1
+    - BiTeleop_RobotHand_2
 
     # - BiTeleop_Damping_1_Hand
     # - BiTeleop_Damping_2_Hand
@@ -200,6 +216,7 @@ states:
     # - JointsDamping_R2_Left
     # - JointsDamping_R1_Right
     # - JointsDamping_R2_Right
+    - PandaPosture
     
 
   Teleop::Main:
@@ -272,6 +289,6 @@ UDPPlugin:
 # Replay
 # UDPPlugin
 # OpenVRPlugin
-Plugins: [mc_joystick_plugin]
+Plugins: [ROS,mc_joystick_plugin]
 
 

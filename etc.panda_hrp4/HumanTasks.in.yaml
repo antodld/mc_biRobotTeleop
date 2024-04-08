@@ -118,9 +118,9 @@
     human_indx : 0
     human_devices: [["LeftHand_human_1","LeftHand"],["LeftArm_human_1","LeftArm"],["Pelvis_human_1","Pelvis"]] #Devices names on human [device, limb]
     robot_device: "Robot_Panda" #Device name attached to the robot
-    robot_link: "NECK_P_LINK" #Robot link on which the device is attached
+    robot_link: "panda_link0" #Robot link on which the device is attached
     calibration:
-      robot_link: L_WRIST_Y_LINK
+      robot_link: panda_link8
       device: LeftHand_human_1
       link_calib_offset: #from human unified frame to robot frame
         translation: [0.04,0.04,0]
