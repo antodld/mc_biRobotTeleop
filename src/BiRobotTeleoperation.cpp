@@ -110,11 +110,20 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   hp_rec_.init("receiver main",distant_human_name_, distant_robot_name_ ,"tcp://" + ip_ + ":" + std::to_string(pub_port_),
                         "tcp://" + ip_ + ":" + std::to_string(sub_port_));
+  hp_rec_.startConnection();
+
+  hp_rec_.subsbscribe("Emergency",mc_rtc::gui::Elements::Checkbox,{"BiRobotTeleop"},"Emergency");
+  hp_rec_.subsbscribe("A",mc_rtc::gui::Elements::Checkbox,{"BiRobotTeleop"},"A");
+  hp_rec_.subsbscribe("Y",mc_rtc::gui::Elements::Checkbox,{"BiRobotTeleop"},"Y");
 
   hp_rec_.setSimulatedDelay(0);
 
+
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Online",[this]() -> bool {return true;},[this](){}));
   gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg(robot().name(),[this]() -> const mc_rbdyn::Robot & {return robot(); }));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Emergency",[this]() -> const bool {return emergency_;},[this](){}));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("A",[this]() -> const bool {return joystickButtonPressed(joystickButtonInputs::A);},[this](){}));
+  gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::Checkbox("Y",[this]() -> const bool {return joystickButtonPressed(joystickButtonInputs::Y);},[this](){}));
   if(robots().robot("robot_2").module().name == "panda_default")
   {
     gui_builder_.addElement({"BiRobotTeleop"},mc_rtc::gui::RobotMsg("panda_robot",[this]() -> const mc_rbdyn::Robot & {return robots().robot("robot_2"); }));
@@ -128,6 +137,8 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     logger().addLogEntry(robot.name() + "_ext_force_base",[this,&robot]() -> const sva::ForceVecd {return getCalibratedExtWrench(robot);});
   }
   logger().addLogEntry("robot_1_ext_force_base_gt",[this]() -> const sva::ForceVecd {return getExtWrenchGT(realRobot("robot_1"),"LeftHand");} );
+  logger().addLogEntry("BiRobotTeleop_distantController_online",[this]() -> bool {return hp_rec_.online() ;});
+
 
   if(global_config_.has("Franka"))
   {
@@ -198,10 +209,18 @@ bool BiRobotTeleoperation::run()
   {
     resetToRealRobot("robot_2");
   }
+  hp_rec_.update();
 
   if(hp_rec_.online())
   {  
     updateDistantHumanRobot();
+    bool distant_emergency = false;
+    hp_rec_.getSubscribedData<bool>(distant_emergency,"Emergency");
+    if(distant_emergency)
+    {
+      mc_rtc::log::critical("Distant Emergency triggered");
+      emergency_ = distant_emergency;
+    }
   }
 
   if(robots().hasRobot("human_1"))
@@ -265,7 +284,12 @@ bool BiRobotTeleoperation::run()
 
   ctl_count_++;
 
-  return mc_control::fsm::Controller::run();
+  auto & robot = robots().robot(distant_robot_name_);
+  // mc_rtc::log::info("q\n{}\nqd\n{}\nqdd\n{}",rbd::paramToVector(robot.mb(),robot.mbc().q),rbd::paramToVector(robot.mb(),robot.mbc().alpha),rbd::paramToVector(robot.mb(),robot.mbc().alphaD));
+  // mc_rtc::log::info("distant : robot dof {}, alpha size {}, alphaD size {}",robot.mb().nrDof(),robot.mbc().alpha.size(),robot.mbc().alphaD.size());
+  // mc_rtc::log::info("local : robot dof {}, alpha size {}, alphaD size {}",robots().robot().mb().nrDof(),robots().robot().mbc().alpha.size(),robots().robot().mbc().alphaD.size());
+
+  return mc_control::fsm::Controller::run() && !emergency_;
 }
 
 void BiRobotTeleoperation::updateDistantHumanRobot()
@@ -277,7 +301,19 @@ void BiRobotTeleoperation::updateDistantHumanRobot()
   {
     robot.mbc().q = hp_rec_.getRobot().mbc().q;
     robot.mbc().alpha = hp_rec_.getRobot().mbc().alpha;
+    // robot.mbc().alphaD = hp_rec_.getRobot().mbc().alphaD;
     robot.posW(hp_rec_.getRobot().posW());
+    
+
+    // const auto & msg = hp_rec_.getRobotMsg();
+    // robot.mbc().q = rbd::vectorToParam(robot.mb(),msg.q);
+    // robot.mbc().alpha = rbd::vectorToParam(robot.mb(),msg.alpha);
+    // // robot.mbc().alphaD = rbd::vectorToParam(robot.mb(),msg.alphaD);
+    // robot.posW(msg.posW);
+
+    rbd::forwardKinematics(robot.mb(),robot.mbc());
+    rbd::forwardVelocity(robot.mb(),robot.mbc());
+    rbd::forwardAcceleration(robot.mb(),robot.mbc());
   } 
 }
 

@@ -89,22 +89,6 @@ human:
     right_forearm: "RForearmLink" 
     pelvis: "HipsLink"
 
-OpenVRPlugin:
-  deviceMap: #[name ; ID]
-  - ["LeftArm_human_1",LHR-A9EEA216]
-  - ["LeftHand_human_1","LHR-9F12939E"]
-  # - ["Pelvis_human_1",LHR-2741ADA8]
-  - ["Pelvis_human_1","LHR-66106DA7"]
-  - ["RightHand_human_2",LHR-A469DE6D]
-  # - ["Pelvis_human_2","LHR-D756B287"]
-  - ["Pelvis_human_2","LHR-E488461D"]
-  - ["Robot_HRP4","LHR-A108F2F9"]
-  - ["Robot_RHPS1","LHR-659508D3"]
-  sleep: 10 #ms
-  localData: true
-  distantData:
-    port: 12338
-    ip: 127.0.0.1
 
 states:
 
@@ -272,6 +256,6 @@ UDPPlugin:
 # Replay
 # UDPPlugin
 # OpenVRPlugin
-Plugins: [mc_joystick_plugin]
+Plugins: [mc_joystick_plugin,OpenVRPlugin]
 
 

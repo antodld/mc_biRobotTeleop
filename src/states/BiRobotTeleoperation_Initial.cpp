@@ -10,6 +10,8 @@ void BiRobotTeleoperation_Initial::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   ctl.datastore().make<bool>("robot_1_IsReady", false);
+  // ctl.getPostureTask("robot_1")->stiffness(5);
+  // ctl.getPostureTask("robot_2")->stiffness(5);
   run(ctl_);
 
 }

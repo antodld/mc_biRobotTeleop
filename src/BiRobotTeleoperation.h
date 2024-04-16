@@ -146,9 +146,10 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   bool joystickButtonPressed(const joystickButtonInputs input);
 
-  void hardEmergency() const
+  void hardEmergency()
   {
-    mc_rtc::log::error_and_throw<std::runtime_error>("Hard Emergency called");
+    emergency_ = true;
+    mc_rtc::log::critical("Hard Emergency called");
   }
 
   size_t ctl_count() const noexcept
@@ -198,7 +199,7 @@ private:
   
   std::unique_ptr<mc_control::ControllerServer> server_;
   mc_rtc::gui::StateBuilder gui_builder_;
-  
+  bool emergency_ = false;
   double cl_gain_ = 1e-6;
 
   //distant_controller_data

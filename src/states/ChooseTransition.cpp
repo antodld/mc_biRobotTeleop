@@ -2,6 +2,7 @@
 #include <mc_control/fsm/Controller.h>
 #include <mc_rtc/gui/Button.h>
 #include <mc_joystick_plugin/joystick_inputs.h>
+#include "../BiRobotTeleoperation.h"
 
 
 void ChooseTransition::configure(const mc_rtc::Configuration & config)
@@ -66,6 +67,7 @@ void ChooseTransition::start(mc_control::fsm::Controller & ctl_)
 
 bool ChooseTransition::run(mc_control::fsm::Controller & ctl_)
 {
+  auto & ctl = static_cast<BiRobotTeleoperation&>(ctl_);
 
   for(auto & joystick_in : joystick_actions_)
   {
@@ -73,6 +75,17 @@ bool ChooseTransition::run(mc_control::fsm::Controller & ctl_)
     {
       output(joystick_in.second);
       mc_rtc::log::info("[{}] Action on joystick chosen, triggering output {}", name(),joystick_in.second);
+    }
+    if(ctl.hp_rec_.online())
+    {
+      std::string button = buttons2str(joystick_in.first);
+      bool state = false;
+      ctl.hp_rec_.getSubscribedData<bool>(state,button);
+      if(state)
+      {
+        output(joystick_in.second);
+        mc_rtc::log::info("[{}] Action on distant joystick chosen, triggering output {}", name(),joystick_in.second);        
+      }
     }
   }
   if(output().empty())

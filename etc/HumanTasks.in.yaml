@@ -91,13 +91,15 @@
   HumanEstimation_1:
     base: HumanPoseEstimation
     human_indx: 0
-    target_limbs: ["LeftHand",LeftArm]
+    # target_limbs: ["LeftHand",LeftArm]
+    target_limbs: []
     stiffness: 50
 
   HumanEstimation_2:
     base: HumanEstimation_1
     human_indx: 1
-    target_limbs: ["RightHand"]
+    # target_limbs: ["RightHand"]
+    target_limbs: []
 
   HumanPoseData_human_2:
     base: HumanPose
@@ -117,8 +119,8 @@
     base: HumanPoseData_human_2
     human_indx : 0
     human_devices: [["LeftHand_human_1","LeftHand"],["LeftArm_human_1","LeftArm"],["Pelvis_human_1","Pelvis"]] #Devices names on human [device, limb]
-    robot_device: "Robot_Panda" #Device name attached to the robot
-    robot_link: "NECK_P_LINK" #Robot link on which the device is attached
+    robot_device: "Robot_RHPS1" #Device name attached to the robot
+    robot_link: "BODY" #Robot link on which the device is attached
     calibration:
       robot_link: L_WRIST_Y_LINK
       device: LeftHand_human_1
