@@ -30,8 +30,8 @@ robots:
   # human_2:
   #   module: human
 
-@mc_humanMap.yaml
-#HumanMap.yaml
+#mc_humanMap.yaml
+@HumanMap.yaml
 
 # General constraints, always on
 constraints:
@@ -169,8 +169,8 @@ states:
     states:
     - RobotArm_1
     - RobotArm_2
-    - RobotForearm_1
-    - RobotForearm_2
+    # - RobotForearm_1
+    # - RobotForearm_2
     - RobotHand_1
     - RobotHand_2
 

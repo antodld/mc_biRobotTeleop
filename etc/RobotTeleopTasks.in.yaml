@@ -42,7 +42,6 @@
       frame: R_SHOULDER_Y_LINK
       dimWeight: [1,1,1,0,0,0]   
       weight: 200
-      stiffness: 100 
     
       
   RobotForearm_1:
