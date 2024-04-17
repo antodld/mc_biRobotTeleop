@@ -112,17 +112,17 @@
         rotation: [3.14,0,1.57]
         translation: [0,0,0.1]
       robot_2:
-        rotation: [3.14,0,3.14]
-        translation: [0.0396284,-0.467851,0.0400966]
+        rotation: [0,3.14,1.57]
+        translation: [0,0,0.1]
 
   HumanPoseData_human_1:
     base: HumanPoseData_human_2
     human_indx : 0
     human_devices: [["LeftHand_human_1","LeftHand"],["LeftArm_human_1","LeftArm"],["Pelvis_human_1","Pelvis"]] #Devices names on human [device, limb]
     robot_device: "Robot_RHPS1" #Device name attached to the robot
-    robot_link: "BODY" #Robot link on which the device is attached
+    robot_link: "HEAD_P_LINK" #Robot link on which the device is attached
     calibration:
-      robot_link: L_WRIST_Y_LINK
+      robot_link: L_ELBOW_Y_LINK
       device: LeftHand_human_1
       link_calib_offset: #from human unified frame to robot frame
         translation: [0.04,0.04,0]

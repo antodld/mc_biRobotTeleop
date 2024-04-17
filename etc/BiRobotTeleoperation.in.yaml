@@ -256,6 +256,6 @@ UDPPlugin:
 # Replay
 # UDPPlugin
 # OpenVRPlugin
-Plugins: [mc_joystick_plugin,OpenVRPlugin]
+Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
 
 

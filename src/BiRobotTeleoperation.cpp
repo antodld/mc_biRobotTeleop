@@ -82,8 +82,8 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
 
   std::string server_ip = config("server")("ip");
-  server_.reset(new mc_control::ControllerServer(dt, dt, {"ipc:///tmp/hp_" + robot().name() + "_server_pub.ipc","tcp://"+ server_ip + ":" + std::to_string(server_pub_port)},
-                                                         {"ipc:///tmp/hp_" + robot().name() +" _server_rep.ipc","tcp://"+ server_ip + ":" + std::to_string(server_sub_port)})
+  server_.reset(new mc_control::ControllerServer(dt, dt, {"tcp://"+ server_ip + ":" + std::to_string(server_pub_port)},
+                                                         {"tcp://"+ server_ip + ":" + std::to_string(server_sub_port)})
                                                          );
   
 
