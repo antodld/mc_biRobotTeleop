@@ -91,20 +91,20 @@
   HumanEstimation_1:
     base: HumanPoseEstimation
     human_indx: 0
-    # target_limbs: ["LeftHand",LeftArm]
-    target_limbs: []
+    target_limbs: [LeftHand,LeftArm]
+    # target_limbs: []
     stiffness: 50
 
   HumanEstimation_2:
     base: HumanEstimation_1
     human_indx: 1
-    # target_limbs: ["RightHand"]
-    target_limbs: []
+    target_limbs: [RightHand,RightArm]
+    # target_limbs: []
 
   HumanPoseData_human_2:
     base: HumanPose
     human_indx : 1
-    human_devices: [["RightHand_human_2","RightHand"],["Pelvis_human_2","Pelvis"]] #Devices names on human [device, limb]
+    human_devices: [["RightHand_human_2","RightHand"],["RightArm_human_2","RightArm"],["Pelvis_human_2","Pelvis"]] #Devices names on human [device, limb]
     robot_device: "Robot_HRP4" #Device name attached to the robot
     robot_link: "NECK_P_LINK" #Robot link on which the device is attached
     link_sensor_transfo: #Transfo from link frame to sensor frame
@@ -113,7 +113,7 @@
         translation: [0,0,0.1]
       robot_2:
         rotation: [0,3.14,1.57]
-        translation: [0,0,0.1]
+        translation: [-0.0286086,-0.0006,0.147969]
 
   HumanPoseData_human_1:
     base: HumanPoseData_human_2
@@ -125,6 +125,6 @@
       robot_link: L_ELBOW_Y_LINK
       device: LeftHand_human_1
       link_calib_offset: #from human unified frame to robot frame
-        translation: [0.04,0.04,0]
+        translation: [0.07,0.0,-0.25]
 
 
