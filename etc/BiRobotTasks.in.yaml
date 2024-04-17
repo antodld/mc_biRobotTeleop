@@ -18,7 +18,7 @@
     robot_2: 
       name: "robot_2"
       links: ["RightArm","RightForearm","RightHand"]
-      unactive_joints: []
+      unactive_joints: ["Root","CHEST_P","CHEST_Y"]
 
   BiTeleopTask_2:
     base: BiTeleopTask_1
