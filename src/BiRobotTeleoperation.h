@@ -34,6 +34,9 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     mc_rtc::log::error_and_throw<std::runtime_error>("tasks {} is not in the solver",name);
   }
 
+  void create_collision_cstr(const mc_rtc::Configuration & config);
+
+
   void updateHumanLink(const mc_rbdyn::Robot & human,const std::string & link ,biRobotTeleop::HumanPose & human_pose,const biRobotTeleop::Limbs human_link)
   {
     Eigen::Vector3d noise_pose = 0.00 * Eigen::Vector3d::Random();

@@ -3,12 +3,14 @@
 #include "yaml_path.h"
 #include <mc_tasks/biRobotTeleopTask.h>
 #include <mc_rtc/gui/RobotMsg.h>
+#include <mc_rtc/ConfigurationHelpers.h>
 #include <RBDyn/FK.h>
 #include <RBDyn/FD.h>
 #include <RBDyn/FV.h>
 #include <RBDyn/FA.h>
 #include <RBDyn/ID.h>
 #include <RBDyn/Coriolis.h>
+
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -31,6 +33,14 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   hp_1_filtered_ = biRobotTeleop::HumanPose("human_1_filtered");
   hp_2_filtered_ = biRobotTeleop::HumanPose("human_2_filtered");
+
+  if(config.has("collisions_with_joint_selection"))
+  {
+    if(config("collisions_with_joint_selection").has(this->robot().name()))
+    {
+      create_collision_cstr(config("collisions_with_joint_selection")(this->robot().name()));
+    }
+  }
 
   if (config.has("human_1"))
   {
@@ -197,6 +207,79 @@ void BiRobotTeleoperation::resetToRealRobot(const std::string & name)
   rbd::forwardVelocity(robot.mb(),robot.mbc());
   rbd::forwardAcceleration(robot.mb(),robot.mbc());
 }
+
+void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & config)
+{
+  std::vector<mc_rbdyn::Collision> collisions;
+  std::vector<std::string> robot_bodies;
+  double iDist = config("iDist");
+  double sDist = config("sDist");
+  double default_iDist = iDist;
+  double default_sDist = sDist;
+  int cstr_set_indx = 0;
+
+  if(config.has("simplified_all_bodies")) { robot_bodies = config("simplified_all_bodies"); }
+  else
+  {
+    for(const auto & bd : this->robot().module().mb.bodies()) { robot_bodies.push_back(bd.name()); }
+  }
+
+  std::vector<std::string> robot_all_bodies = robot_bodies;
+
+  auto collisionConf = mc_rtc::fromVectorOrElement(config, "cstr_sets", std::vector<mc_rtc::Configuration>{});
+
+  for(auto & conf :collisionConf)
+  {
+      mc_rtc::log::info("adding set {}", cstr_set_indx);
+      std::string cstr_set = "cstr_set_" + std::to_string(cstr_set_indx);
+      if(conf.has("iDist")) { iDist = conf("iDist"); }
+      if(conf.has("sDist")) { sDist = conf("sDist"); }
+      std::vector<std::string> bodies_1 = conf("b1");
+      if(bodies_1.size() == 0) { bodies_1 = robot_bodies; }
+      std::vector<std::string> bodies_2 = conf("b2");
+      if(bodies_2.size() == 0) { bodies_2 = robot_all_bodies; }
+      std::vector<std::string> joints = conf("joints");
+      for(auto it = joints.begin(); it != joints.end();)
+      {
+        if(!this->robot().hasJoint(*it))
+        {
+          mc_rtc::log::error("Discarding joint {} because it does not exist in {}", *it, this->robot().name());
+          it = joints.erase(it);
+        }
+        else { ++it; }
+      }
+
+      for(auto bd1 = std::begin(bodies_1); bd1 != std::end(bodies_1); bd1++)
+      {
+        for(auto bd2 = std::begin(bodies_2); bd2 != std::end(bodies_2); bd2++)
+        {
+          if(*bd1 != *bd2)
+          {
+            if(!this->robot().hasBody(*bd1))
+            {
+              mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd1,
+                                 this->robot().name());
+            }
+            else if(!this->robot().hasBody(*bd2))
+            {
+              mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd2,
+                                 this->robot().name());
+            }
+            else { collisions.push_back(mc_rbdyn::Collision(*bd1, *bd2, iDist, sDist, 0., joints, {})); }
+          }
+        }
+        robot_bodies.erase(std::remove(robot_bodies.begin(), robot_bodies.end(), *bd1), robot_bodies.end());
+      }
+    
+    iDist = default_iDist;
+    sDist = default_sDist;
+    cstr_set_indx += 1;
+  }
+  this->addCollisions(this->robot().name(), this->robot().name(), collisions);
+  mc_rtc::log::success("Self Collisions setted");
+}
+  
+
 
 bool BiRobotTeleoperation::run()
 {
