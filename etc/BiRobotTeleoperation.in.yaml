@@ -22,7 +22,7 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4
+    module: HRP4::ImpactGrippers
   robot_2:
     module: RHPS1
   # human_1:
@@ -61,47 +61,47 @@ collisions_with_joint_selection:
   robot_2:
     iDist: 0.01
     sDist: 0.005
-    simplified_all_bodies: [BODY, NECK_P_LINK, CHEST_Y_LINK,
+    simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK,
                            L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
-                           L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, L_WRIST_P_LINK,
+                           L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK,
                            R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK, R_ELBOW_P_LINK,
-                           R_WRIST_Y_LINK, R_WRIST_R_LINK, R_WRIST_P_LINK,
-                           L_HIP_P_LINK ,
-                           R_HIP_P_LINK ,
+                           R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK,
+                           L_CROTCH_P_LINK ,
+                           R_CROTCH_P_LINK ,
                            R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, L_HAND_PALM]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , BODY, NECK_P_LINK, CHEST_Y_LINK]
-      joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R, L_WRIST_P]
-    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, R_HAND_PALM]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , BODY, NECK_P_LINK, CHEST_Y_LINK]
-      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
-    - b1: [R_ELBOW_P_LINK, R_HAND_PALM]
-      b2: [L_ELBOW_P_LINK, L_HAND_PALM]
-      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
-    - b1: [ L_HIP_P_LINK]
-      b2: [ R_HIP_P_LINK]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK]
+      b2: [R_CROTCH_P_LINK , L_CROTCH_Y_LINK , BODY, HEAD_P_LINK, CHEST_P_LINK]
+      joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R]
+    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK]
+      b2: [R_CROTCH_P_LINK , L_CROTCH_Y_LINK , BODY, HEAD_P_LINK, CHEST_P_LINK]
+      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
+    - b1: [R_ELBOW_P_LINK]
+      b2: [L_ELBOW_P_LINK]
+      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
+    - b1: [ L_CROTCH_P_LINK]
+      b2: [ R_CROTCH_P_LINK]
       joints: []
   robot_1:
     iDist: 0.01
     sDist: 0.005
-    simplified_all_bodies: [BODY, NECK_P_LINK, CHEST_Y_LINK,
+    simplified_all_bodies: [body, NECK_P_LINK, torso,
                            L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
                            L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, L_WRIST_P_LINK,
                            R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK, R_ELBOW_P_LINK,
-                           R_WRIST_Y_LINK, R_WRIST_R_LINK, R_WRIST_P_LINK,
+                           R_WRIST_Y_LINK, r_wrist, R_WRIST_P_LINK,
                            L_HIP_P_LINK ,
                            R_HIP_P_LINK ,
                            R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, L_HAND_PALM]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , BODY, NECK_P_LINK, CHEST_Y_LINK]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, l_wrist]
+      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , body, torso]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R, L_WRIST_P]
-    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, R_HAND_PALM]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , BODY, NECK_P_LINK, CHEST_Y_LINK]
+    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, r_wrist]
+      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , body, torso]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
-    - b1: [R_ELBOW_P_LINK, R_HAND_PALM]
-      b2: [L_ELBOW_P_LINK, L_HAND_PALM]
+    - b1: [R_ELBOW_P_LINK, r_wrist]
+      b2: [L_ELBOW_P_LINK, l_wrist]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
     - b1: [ L_HIP_P_LINK]
       b2: [ R_HIP_P_LINK]
