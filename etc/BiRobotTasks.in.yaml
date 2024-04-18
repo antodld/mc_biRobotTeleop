@@ -1,6 +1,7 @@
   BiTeleopTask_1:
     base: BiRobotTeleoperation_Task
     name: biRobotTask_1
+    use_estimated_human: true
     stiffness: 5
     softMaxGain: 40
     deltaDistGain: 0
