@@ -207,8 +207,8 @@ states:
   BiRobot::Teleop:
     base: Parallel
     states:
-    # - BiTeleopTask_1
-    - BiTeleopTask_2
+    - BiTeleopTask_1
+    # - BiTeleopTask_2
     - Forces
     - ChoiceBiTeleop
     delays:

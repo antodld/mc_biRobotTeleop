@@ -231,7 +231,6 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
   for(auto & conf :collisionConf)
   {
       mc_rtc::log::info("adding set {}", cstr_set_indx);
-      std::string cstr_set = "cstr_set_" + std::to_string(cstr_set_indx);
       if(conf.has("iDist")) { iDist = conf("iDist"); }
       if(conf.has("sDist")) { sDist = conf("sDist"); }
       std::vector<std::string> bodies_1 = conf("b1");
