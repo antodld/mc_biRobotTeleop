@@ -1,2 +1,5 @@
 .vscode/
 src/yaml_path.h
+build
+.cache/
+compile_commands.json

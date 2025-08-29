@@ -5,10 +5,10 @@
     human_targetLimb: LeftArm
     robot_refFrame: body
     completion_eval: 5e-3
-    human_robot_RefTransfo: 
+    human_robot_RefTransfo:
       translation: [0.,0.,0.]
       rotation: [0.,0.,0.]
-    human_robot_TargetTransfo: 
+    human_robot_TargetTransfo:
       translation: [0.,0.,0.]
       rotation: [0,0.,0.]
     variable_stiffness:
@@ -19,7 +19,7 @@
       type: transform
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
       frame: L_SHOULDER_Y_LINK
-      dimWeight: [1,1,1,0,0,0]   
+      dimWeight: [1,1,1,0,0,0]
       weight: 200
       stiffness: 5
     completion_eval: 1e4
@@ -30,26 +30,26 @@
     human_indx: 1
     human_targetLimb: RightArm
     robot_refFrame: BODY
-    human_robot_RefTransfo: 
+    human_robot_RefTransfo:
       translation: [0.,0.,0.]
       rotation: [0.,0.,0.]
-    human_robot_TargetTransfo: 
+    human_robot_TargetTransfo:
       translation: [0.,0.,0.]
       rotation: [0,0.,0.]
     task:
       type: transform
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
       frame: R_SHOULDER_Y_LINK
-      dimWeight: [1,1,1,0,0,0]   
+      dimWeight: [1,1,1,0,0,0]
       weight: 200
-    
-      
+
+
   RobotForearm_1:
     base: RobotArm_1
     human_targetLimb: LeftForearm
     task:
       frame: L_ELBOW_P_LINK
-  
+
   RobotForearm_2:
     base: RobotArm_2
     human_targetLimb: RightForearm
@@ -61,11 +61,9 @@
     human_targetLimb: LeftHand
     task:
       frame: l_wrist
-  
+
   RobotHand_2:
     base: RobotArm_2
     human_targetLimb: RightHand
     task:
       frame: R_WRIST_Y_LINK
-    
-  

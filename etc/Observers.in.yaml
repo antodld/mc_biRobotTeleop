@@ -24,7 +24,7 @@ ObserverPipelines:
       #   config:
       #     robot: robot_1
       #     asBackup: true
-      #     odometryType: 6D 
+      #     odometryType: 6D
       #     velUpdatedUpstream: false
       #     accUpdatedUpstream: false
       #     contactsDetection: Surfaces
@@ -53,4 +53,3 @@ ObserverPipelines:
       - type: Encoder
         robot: robot_2
         update_robot: robot_2
-

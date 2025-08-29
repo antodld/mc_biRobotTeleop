@@ -136,7 +136,7 @@ human:
     left_arm: "LArmLink"
     right_arm: "RArmLink"
     left_forearm: "LForearmLink"
-    right_forearm: "RForearmLink" 
+    right_forearm: "RForearmLink"
     pelvis: "HipsLink"
 
 
@@ -162,12 +162,12 @@ states:
 
   Human::Trajectory:
     base: Parallel
-    states: 
+    states:
       - HumanHandTrajTasks
 
   Human::Free:
     base: Parallel
-    states: 
+    states:
       - HumanHandTasks
 
   Human:
@@ -187,7 +187,7 @@ states:
     task:
       weight: 00
       stiffness: 20
-  
+
   ChoiceTeleop:
     base: ChooseTransition
     category: []
@@ -213,7 +213,7 @@ states:
     - ChoiceBiTeleop
     delays:
       ChoiceBiTeleop: 0.5
-  
+
   Robot::Teleop:
     base: Parallel
     states:
@@ -229,12 +229,12 @@ states:
     # - BiTeleop_Damping_1_Forearm
     # - BiTeleop_Damping_2_Forearm
     # - BiTeleop_Damping_1_Arm
-    # - BiTeleop_Damping_2_Arm    
+    # - BiTeleop_Damping_2_Arm
     # - JointsDamping_R1_Left
     # - JointsDamping_R2_Left
     # - JointsDamping_R1_Right
     # - JointsDamping_R2_Right
-    
+
 
   Teleop::Main:
     base: Meta
@@ -243,8 +243,8 @@ states:
       - [ChoiceMain, HALFSIT, GoHalfSitting, Auto]
       - [GoHalfSitting, OK, ChoiceMain, Auto]
       - [ChoiceMain, TELEOP, Teleop::Sequence, Auto]
-      - [Teleop::Sequence,CANCEL,ChoiceMain,Auto]  
-  
+      - [Teleop::Sequence,CANCEL,ChoiceMain,Auto]
+
   Teleop::Sequence:
     base: Parallel
     states:
@@ -253,7 +253,7 @@ states:
       - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
-  
+
   biTeleop::Sequence:
     base: Meta
     transitions:
@@ -270,7 +270,7 @@ states:
     # - RobotForearm_2
     - RobotHand_1
     - RobotHand_2
-  
+
   MainState:
     base: Parallel
     states:
@@ -307,5 +307,3 @@ UDPPlugin:
 # UDPPlugin
 # OpenVRPlugin
 Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
-
-

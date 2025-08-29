@@ -7,8 +7,8 @@
    task:
     type: transform
     unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
-    frame: LeftHand 
-    dimWeight: [0,0,0,1,1,1]   
+    frame: LeftHand
+    dimWeight: [0,0,0,1,1,1]
     weight: 30
     damping: 100
 
@@ -17,9 +17,9 @@
    name: Robot_2_HandDamping
    robot_name: robot_2
    human_indx: 1
-   task:     
+   task:
     unactiveJoints: ["Root","WAIST_P","WAIST_R","WAIST_Y"]
-    frame: R_WRIST_Y_S        
+    frame: R_WRIST_Y_S
 
   BiTeleop_Damping_1_Hand:
     base: HandDamping

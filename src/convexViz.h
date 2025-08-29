@@ -1,11 +1,13 @@
 #pragma once
+#include <SpaceVecAlg/SpaceVecAlg>
+
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <sch/S_Object/S_Sphere.h>
-#include <sch/S_Object/S_Cylinder.h>
-#include <sch/S_Polyhedron/S_Polyhedron.h>
+
 #include <sch/CD/CD_Pair.h>
-#include <SpaceVecAlg/SpaceVecAlg>
+#include <sch/S_Object/S_Cylinder.h>
+#include <sch/S_Object/S_Sphere.h>
+#include <sch/S_Polyhedron/S_Polyhedron.h>
 
 visualization_msgs::Marker initMarker(const std::string & frame_id, const std::string & name, size_t id, int32_t t)
 {
@@ -59,34 +61,36 @@ visualization_msgs::Marker fromCylinder(const std::string & frame_id,
   marker.scale.z = (cylinder.getP2() - cylinder.getP1()).norm();
   auto midP = cylinder.getP1() + (cylinder.getP2() - cylinder.getP1()) / 2;
   Eigen::Vector3d midPV3{midP.m_x, midP.m_y, midP.m_z};
-  
+
   auto p1_sch = cylinder.getP1();
   Eigen::Vector3d p1{p1_sch.m_x, p1_sch.m_y, p1_sch.m_z};
   auto p2_sch = cylinder.getP2();
-  Eigen::Vector3d p2{p2_sch.m_x, p2_sch.m_y, p2_sch.m_z}; 
+  Eigen::Vector3d p2{p2_sch.m_x, p2_sch.m_y, p2_sch.m_z};
   Eigen::Vector3d z = (p2 - p1).normalized();
   assert(z.norm() != 0);
   Eigen::Vector3d z_2;
-  if( z.cross(Eigen::Vector3d{0,0,1}).norm() != 0 )
+  if(z.cross(Eigen::Vector3d{0, 0, 1}).norm() != 0)
   {
-    z_2 = Eigen::Vector3d{0,0,1};
+    z_2 = Eigen::Vector3d{0, 0, 1};
   }
-  else if(z.cross(Eigen::Vector3d{0,1,0}).norm() != 0)
+  else if(z.cross(Eigen::Vector3d{0, 1, 0}).norm() != 0)
   {
-    z_2 = Eigen::Vector3d{0,1,0};
+    z_2 = Eigen::Vector3d{0, 1, 0};
   }
   else
   {
-    z_2 = Eigen::Vector3d{1,0,0};
+    z_2 = Eigen::Vector3d{1, 0, 0};
   }
   Eigen::Vector3d y = (z.cross(z_2)).normalized();
   Eigen::Vector3d x = y.cross(z).normalized();
   Eigen::Matrix3d R_1_0;
-  R_1_0.col(0) = x; R_1_0.col(1) = y; R_1_0.col(2) = z; 
+  R_1_0.col(0) = x;
+  R_1_0.col(1) = y;
+  R_1_0.col(2) = z;
   // std::cout << "z\n" << z << std::endl;
   // std::cout << "z_2\n" << z_2 << std::endl;
   // std::cout << "R\n" << R_1_0 << std::endl;
-  
+
   sva::PTransformd cylinderCenter{R_1_0.transpose(), midPV3};
   setMarkerPose(marker, cylinderCenter * colTrans);
   return marker;
@@ -140,7 +144,10 @@ sch::Matrix4x4 convertTransfo(const sva::PTransformd & X_0_cvx)
 
   for(unsigned int i = 0; i < 3; ++i)
   {
-    for(unsigned int j = 0; j < 3; ++j) { m(i, j) = rot(j, i); }
+    for(unsigned int j = 0; j < 3; ++j)
+    {
+      m(i, j) = rot(j, i);
+    }
   }
 
   m(0, 3) = tran(0);

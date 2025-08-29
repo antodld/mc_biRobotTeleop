@@ -1,23 +1,23 @@
 robot_limb_map:
   robot_1:
-    left_hand: 
+    left_hand:
       name: "l_wrist"
-    right_hand: 
+    right_hand:
       name: "r_wrist"
-    left_arm: 
+    left_arm:
       name: "L_SHOULDER_Y_LINK"
-    right_arm: 
+    right_arm:
       name: "R_SHOULDER_Y_LINK"
     left_forearm:
       name: "L_ELBOW_P_LINK"
-    right_forearm: 
-      name: "R_ELBOW_P_LINK"  
+    right_forearm:
+      name: "R_ELBOW_P_LINK"
     pelvis:
-      name: "body" 
-  robot_2: 
+      name: "body"
+  robot_2:
     left_hand:
       name: "L_WRIST_Y_LINK"
-    right_hand: 
+    right_hand:
       name: "R_WRIST_Y_LINK"
     left_arm:
       name: "L_SHOULDER_Y_LINK"
@@ -26,6 +26,6 @@ robot_limb_map:
     left_forearm:
       name: "L_ELBOW_Y_LINK"
     right_forearm:
-      name: "R_ELBOW_Y_LINK" 
-    pelvis: 
-      name: "BODY" 
+      name: "R_ELBOW_Y_LINK"
+    pelvis:
+      name: "BODY"

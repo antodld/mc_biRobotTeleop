@@ -1,13 +1,14 @@
 #pragma once
 
 #include <mc_control/fsm/State.h>
-#include <mc_tasks/AdmittanceTask.h>
-#include <mc_rtc/gui/Input.h>
-#include <mc_rtc/gui/Checkbox.h>
-#include <mc_tasks/TransformTask.h>
-#include <biRobotTeleop/type.h>
-#include <biRobotTeleop/HumanRobotPose.h>
 #include <mc_filter/LowPass.h>
+#include <mc_rtc/gui/Checkbox.h>
+#include <mc_rtc/gui/Input.h>
+#include <mc_tasks/AdmittanceTask.h>
+#include <mc_tasks/TransformTask.h>
+
+#include <biRobotTeleop/HumanRobotPose.h>
+#include <biRobotTeleop/type.h>
 
 struct ForceTransmission : mc_control::fsm::State
 {
@@ -28,7 +29,7 @@ struct ForceTransmission : mc_control::fsm::State
   {
     const int n_delay = static_cast<int>(t_delay_ / dt_);
     const int indx = data.size() - 1 - n_delay;
-    if(data.size() <= indx )
+    if(data.size() <= indx)
     {
       return T::Zero();
     }
@@ -36,12 +37,12 @@ struct ForceTransmission : mc_control::fsm::State
   }
   /**
    * @brief update energy if the power is positive
-   * 
+   *
    * @param energy energy to be updated
-   * @param force 
-   * @param vel 
+   * @param force
+   * @param vel
    */
-  void updateEnergyState(Eigen::Vector6d & energy,const sva::ForceVecd & force, const sva::MotionVecd vel);
+  void updateEnergyState(Eigen::Vector6d & energy, const sva::ForceVecd & force, const sva::MotionVecd vel);
 
   void updateEnergyWindow(Eigen::Vector6d & e, std::vector<Eigen::Vector6d> & E)
   {
@@ -55,19 +56,21 @@ struct ForceTransmission : mc_control::fsm::State
 
   void resetEnergyState();
 
-  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs & frame) const;
+  const biRobotTeleop::Limbs getContactLimb(mc_control::fsm::Controller & ctl_,
+                                            const biRobotTeleop::Limbs & frame) const;
 
   /**
    * @brief Get the contact location on the robot indx limb, it suppose contact exist
-   * 
-   * @param ctl_ 
-   * @param robot_indx 
-   * @param limb_robot 
-   * @param limb_human 
-   * @return Eigen::Vector3d 
+   *
+   * @param ctl_
+   * @param robot_indx
+   * @param limb_robot
+   * @param limb_human
+   * @return Eigen::Vector3d
    */
-  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,const biRobotTeleop::Limbs limb_robot,const biRobotTeleop::Limbs limb_human) const;
-
+  Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,
+                                     const biRobotTeleop::Limbs limb_robot,
+                                     const biRobotTeleop::Limbs limb_human) const;
 
   double dt_ = 5e-3;
   std::string receiver_name_ = "";
@@ -76,9 +79,9 @@ struct ForceTransmission : mc_control::fsm::State
   Eigen::Vector6d e_s_out_ = Eigen::Vector6d::Zero();
   Eigen::Vector6d e_r_in_ = Eigen::Vector6d::Zero();
   Eigen::Vector6d e_s_in_ = Eigen::Vector6d::Zero();
-  Eigen::Vector6d e_d_ = Eigen::Vector6d::Zero(); //dissipated energy
+  Eigen::Vector6d e_d_ = Eigen::Vector6d::Zero(); // dissipated energy
 
-  Eigen::Vector6d r_d_ = Eigen::Vector6d::Zero(); //dissipating load
+  Eigen::Vector6d r_d_ = Eigen::Vector6d::Zero(); // dissipating load
   bool use_load_ = true;
   double t_delay_ = 0;
   std::vector<sva::ForceVecd> received_force_;
@@ -91,9 +94,10 @@ struct ForceTransmission : mc_control::fsm::State
 
   Eigen::VectorXd weight_ = Eigen::VectorXd::Ones(6);
 
-  sva::PTransformd X_frameR_frame_ = sva::PTransformd::Identity(); //Transform from the receiver control frame to the control frame
+  sva::PTransformd X_frameR_frame_ =
+      sva::PTransformd::Identity(); // Transform from the receiver control frame to the control frame
 
-  int max_buffer_size_ = 200; 
+  int max_buffer_size_ = 200;
 
   mc_rtc::Configuration config_;
 
@@ -115,22 +119,25 @@ struct ForceTransmission : mc_control::fsm::State
 
   bool active_ = false;
 
-  std::vector<mc_filter::LowPass<sva::ForceVecd>> activation_force_measurements_; //the threshold must be over a low pass filtered value of the force/sensor
-  mc_filter::LowPass<sva::ForceVecd>* active_force_measurement_  = nullptr; //If the active force control filtered measurement is below the threshold, the force control is deactivated
+  std::vector<mc_filter::LowPass<sva::ForceVecd>>
+      activation_force_measurements_; // the threshold must be over a low pass filtered value of the force/sensor
+  mc_filter::LowPass<sva::ForceVecd> * active_force_measurement_ =
+      nullptr; // If the active force control filtered measurement is below the threshold, the force control is
+               // deactivated
 
-  std::string contact_limb_ = "None"; //human limb in contact with a robot link equipped of force sensors 
+  std::string contact_limb_ = "None"; // human limb in contact with a robot link equipped of force sensors
 
   std::string robot_custom_force_sensor_name_ = "";
 
-  biRobotTeleop::Limbs human_limb_; //human limb in contact with the robot 
-  biRobotTeleop::Limbs robot_limb_; //robot limb in contact 
+  biRobotTeleop::Limbs human_limb_; // human limb in contact with the robot
+  biRobotTeleop::Limbs robot_limb_; // robot limb in contact
   std::vector<std::string> force_sensor_limbs_;
 
-  sva::ForceVecd measured_force_ = sva::ForceVecd::Zero(); //measured force in the link frame unified according to robotPose offsets
+  sva::ForceVecd measured_force_ =
+      sva::ForceVecd::Zero(); // measured force in the link frame unified according to robotPose offsets
 
-  double force_activation_threshold_ = 10; //force threshold on which the force control is activated;
-  double distance_activation_threshold_ = 10; //force threshold on which the force control is activated;
+  double force_activation_threshold_ = 10; // force threshold on which the force control is activated;
+  double distance_activation_threshold_ = 10; // force threshold on which the force control is activated;
 
-  double deactivation_threshold_ = 0.15; //distance threshold on which the force control is deactivated
-
+  double deactivation_threshold_ = 0.15; // distance threshold on which the force control is deactivated
 };

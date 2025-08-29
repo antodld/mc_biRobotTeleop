@@ -32,8 +32,8 @@
           translation: [0.35, -0.3, 1]
           rotation: [0., -1.57, 0.0]
         completion:
-          eval: 0.05   
-    
+          eval: 0.05
+
   LeftForceDisplay:
     base: ForceDisplay
     delay: 0.2
@@ -53,7 +53,7 @@
                     "L_WRIST_R",
                     "L_WRIST_Y",
                     "L_HAND"]
-    
+
   RightForceDisplay:
     base: LeftForceDisplay
     receiver_name: LeftForceDisplay

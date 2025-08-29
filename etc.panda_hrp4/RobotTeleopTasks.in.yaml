@@ -5,10 +5,10 @@
     human_targetLimb: LeftArm
     robot_refFrame: body
     completion_eval: 5e-3
-    human_robot_RefTransfo: 
+    human_robot_RefTransfo:
       translation: [0.,0.,0.]
       rotation: [0.,0.,0.]
-    human_robot_TargetTransfo: 
+    human_robot_TargetTransfo:
       translation: [0.,0.,0.]
       rotation: [0,0.,0.]
     variable_stiffness:
@@ -19,7 +19,7 @@
       type: transform
       unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
       frame: L_SHOULDER_Y_LINK
-      dimWeight: [1,1,1,0,0,0]   
+      dimWeight: [1,1,1,0,0,0]
       weight: 200
       stiffness: 5
 
@@ -29,33 +29,33 @@
     human_indx: 1
     human_targetLimb: RightArm
     robot_refFrame: panda_link0
-    human_robot_RefTransfo: 
+    human_robot_RefTransfo:
       translation: [-0.15,0.,-0.4]
       rotation: [0.,0.,0.]
-    human_robot_TargetTransfo: 
+    human_robot_TargetTransfo:
       translation: [0.,0.,0.]
       rotation: [1.57,0,3.14]
     task:
       unactiveJoints: []
       frame: panda_link4
-      dimWeight: [1,1,1,1,1,1]   
-    
+      dimWeight: [1,1,1,1,1,1]
+
   BiTeleop_RobotArm_1:
     base: RobotArm_1
     completion_eval: 1e4
 
-  
+
   BiTeleop_RobotArm_2:
     base: RobotArm_2
     completion_eval: 1e4
 
-    
+
   BiTeleop_RobotForearm_1:
     base: BiTeleop_RobotArm_1
     human_targetLimb: LeftForearm
     task:
       frame: L_ELBOW_P_LINK
-  
+
   BiTeleop_RobotForearm_2:
     base: BiTeleop_RobotArm_2
     human_targetLimb: RightForearm
@@ -67,13 +67,13 @@
     human_targetLimb: LeftHand
     task:
       frame: l_wrist
-  
+
   BiTeleop_RobotHand_2:
     base: BiTeleop_RobotArm_2
     human_targetLimb: RightHand
     task:
       frame: panda_link8
-    
+
   PandaPosture:
     base: MetaTasks
     tasks:
@@ -82,7 +82,7 @@
       #   robot: robot_2
       #   dimWeight: [0,1,0,0,0,0,0]
       #   weight: 50
-      #   target: 
+      #   target:
       #     panda_joint1: [0]
       #     panda_joint2: [1]
       #     panda_joint3: [0]
@@ -105,5 +105,3 @@
           offset:
             translation: [0., 0., -0.1]
             rotation: [0.0, 0.0, 0.0]
-
-  

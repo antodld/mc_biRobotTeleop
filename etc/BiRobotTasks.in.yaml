@@ -16,7 +16,7 @@
       name: robot_1
       links: [LeftHand]
       unactive_joints: ["Root","CHEST_P","CHEST_Y"]
-    robot_2: 
+    robot_2:
       name: "robot_2"
       # links: ["RightArm","RightForearm","RightHand"]
       links: ["RightArm","RightForearm"]
@@ -33,4 +33,3 @@
     robot_2:
       isMainRobot: 0
       links: ["RightHand"]
-

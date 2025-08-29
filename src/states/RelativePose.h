@@ -18,12 +18,12 @@ struct RelativePose : mc_control::fsm::State
 
   void teardownGUI(mc_control::fsm::Controller & ctl);
 
-  void addLocalTransfoGUI(mc_control::fsm::Controller & ctl,const std::string & name, sva::PTransformd & transfo);
+  void addLocalTransfoGUI(mc_control::fsm::Controller & ctl, const std::string & name, sva::PTransformd & transfo);
 
   std::string r_name_ = "";
 
   mc_rtc::Configuration stateConfig_;
-  
+
   unsigned int h_indx_ = 0;
 
   std::string robotRefFrame_ = "";
@@ -43,7 +43,6 @@ struct RelativePose : mc_control::fsm::State
 
   double dt_ = 0.005;
   size_t count_ = 0;
-  double low_stiff_duration_ = 1; //duration the task is at low stiff
-  double full_stiff_duration_ = 1; //duration the task comes back to full stiff
-
+  double low_stiff_duration_ = 1; // duration the task is at low stiff
+  double full_stiff_duration_ = 1; // duration the task comes back to full stiff
 };

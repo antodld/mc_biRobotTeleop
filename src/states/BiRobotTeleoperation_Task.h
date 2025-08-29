@@ -2,6 +2,7 @@
 
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/biRobotTeleopTask.h>
+
 #include <biRobotTeleop/HumanRobotPose.h>
 #include <biRobotTeleop/type.h>
 
@@ -35,25 +36,24 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
   double softMaxGain_ = 10;
   double deltaDistGain_ = 1;
   std::vector<double> dist_;
-  //Used to get the transfo for the softmax computation
+  // Used to get the transfo for the softmax computation
   size_t indx_sotfM = 0;
 
   bool useEstimatedHuman_ = false;
 
   bool done_ = false;
 
-  //The weight is a linear interpolation clamped in the distance range between the weight range
-  Eigen::Vector2d weightRange_ = {20,1000};
+  // The weight is a linear interpolation clamped in the distance range between the weight range
+  Eigen::Vector2d weightRange_ = {20, 1000};
   Eigen::Vector2d weightDistanceRange_ = Eigen::Vector2d::Zero();
-
 };
 
-double softMax(const std::vector<double> & x, const double k , const size_t indx)
+double softMax(const std::vector<double> & x, const double k, const size_t indx)
 {
   double d = 0;
-  for (const auto & x_i : x)
+  for(const auto & x_i : x)
   {
-    d += exp(k*x_i);
+    d += exp(k * x_i);
   }
-  return  exp(k*x[indx])/d;
+  return exp(k * x[indx]) / d;
 }

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <mc_control/fsm/State.h>
-#include <SpaceVecAlg/SpaceVecAlg>
-#include <mc_tasks/PostureTask.h>
-#include <biRobotTeleop/type.h>
 #include <mc_filter/LowPass.h>
+#include <mc_tasks/PostureTask.h>
+
+#include <SpaceVecAlg/SpaceVecAlg>
+
+#include <biRobotTeleop/type.h>
 
 struct JointsDamping : mc_control::fsm::State
 {
@@ -24,12 +26,10 @@ struct JointsDamping : mc_control::fsm::State
 
   std::shared_ptr<mc_tasks::PostureTask> task_;
 
-  mc_filter::LowPass<sva::MotionVecd> vel_filter_ = mc_filter::LowPass<sva::MotionVecd>(0.005,0.1);
+  mc_filter::LowPass<sva::MotionVecd> vel_filter_ = mc_filter::LowPass<sva::MotionVecd>(0.005, 0.1);
 
   std::vector<std::string> joints_;
   biRobotTeleop::Limbs measured_limb_;
   double damping_ = 100;
   bool damping_on_ = false;
-
-
 };

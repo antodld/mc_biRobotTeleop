@@ -23,7 +23,7 @@
                       "R_WRIST_R","L_WRIST_R",
                       "R_WRIST_Y","L_WRIST_Y",
                       "R_WRIST_P","L_WRIST_P"]
-    robot_2: 
+    robot_2:
       task:
         weight: 2000
         sitffness: 0

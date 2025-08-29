@@ -35,7 +35,7 @@ GUIServer:
     Socket: /tmp/mc_rtc_2
   TCP:
     # Binding host, * binds to all interfaces
-    Host: "*" 
+    Host: "*"
     # Binding ports, the first is used for PUB socket and the second for
     # the PULL socket
     Ports: [4242, 4343]
@@ -54,5 +54,5 @@ human_sim:
   active: true #if true the sensor data are overwritten by an external human controller
   ip: localhost #host address of the simulated human controller
   sub_port : 4242
-  pub_port: 4343 
+  pub_port: 4343
 ```

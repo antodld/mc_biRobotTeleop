@@ -8,7 +8,7 @@
     base: HalfSitting
     robot: robot_2
     eval: 1e3
-  
+
   PandaPostureBase:
     base: MetaTasks
     tasks:
@@ -17,7 +17,7 @@
         robot: robot_2
         dimWeight: [1,0,0,0,0,0,0]
         weight: 500
-        target: 
+        target:
           panda_joint1: [-1.542]
           panda_joint2: [0]
           panda_joint3: [0]

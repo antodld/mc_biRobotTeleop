@@ -16,7 +16,7 @@ human_1:
           rotation: [1.57,0,3.14]
     forearm:
       radius: 0.03
-      length: 0.2   
+      length: 0.2
       offset:
         left:
           rotation: [-1.57,0,0]
@@ -24,7 +24,7 @@ human_1:
           rotation: [1.57,0,3.14]
     hand:
       radius: 0.03
-      length: 0.1 
+      length: 0.1
       offset:
         left:
           translation: [-0.05,0.12,0.05]
@@ -50,7 +50,7 @@ human_2:
           rotation: [1.57,0,3.14]
     forearm:
       radius: 0.03
-      length: 0.2   
+      length: 0.2
       offset:
         left:
           rotation: [-1.57,0,0]
@@ -58,7 +58,7 @@ human_2:
           rotation: [1.57,0,3.14]
     hand:
       radius: 0.03
-      length: 0.1 
+      length: 0.1
       offset:
         left:
           translation: [-0.05,0.12,0.05]
