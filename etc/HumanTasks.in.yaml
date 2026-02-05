@@ -1,128 +1,182 @@
-  Human_1_HandTrajTasks:
-    base: MetaTasks
-    tasks:
-      Human_1_Left:
-        type: bspline_trajectory
-        name: Human_1_RightHand
+---
+Human_1_HandTrajTasks:
+  base: MetaTasks
+  tasks:
+    Human_1_Left:
+      type: bspline_trajectory
+      name: Human_1_RightHand_traj
+      robot: human_1
+      frame: LHandLink
+      stiffness: 100
+      weight: 10
+      dimWeight: [1, 1, 1, 1, 1, 1]
+      unactiveJoints: ["Root"]
+      targetFrame:
         robot: human_1
-        frame: LHandLink
-        stiffness: 100
-        weight: 10
-        dimWeight: [1,1,1,1,1,1]
-        unactiveJoints: ["Root"]
-        targetFrame:
-          robot: human_1
-          frame: TorsoLink
-          # translation: [0.,0.2,0.1]
-          # rotation: [-1.57,0,0]
-          translation: [0.,0.2,0.2]
-          rotation: [0,-1.57,-1.57]
-        weight: 10
-        duration : 5
-        completion:
-          timeElapsed: true
-      Human_Torso:
-        type: orientation
         frame: TorsoLink
-        unactiveJoints: ["Root"]
-        robot: human_1
-        weight: 300
+        # translation: [0.,0.2,0.1]
+        # rotation: [-1.57,0,0]
+        translation: [0.4, 0.3, 0.2]
+        rotation: [0.3, -1.57, -1.57]
+      duration: 10
+      completion:
+        timeElapsed: true
+        eval: 1e-2
+    Human_Torso:
+      type: orientation
+      frame: TorsoLink
+      unactiveJoints: ["Root"]
+      robot: human_1
+      weight: 300
+
+    Human_1_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_1
+      weight: 10
 
 
-  Human_2_HandTrajTasks:
-    base: MetaTasks
-    tasks:
-      Human_2_Right:
-          type: bspline_trajectory
-          name: Human_2_LeftHand
-          robot: human_2
-          frame: RHandLink
-          unactiveJoints: ["Root"]
-          # targetFrame:
-          #   robot: robot_1
-          #   frame: L_SHOULDER_Y_LINK
-          #   translation: [0.,0.1,-0.15]
-          #   rotation: [0.,-1.57,-1.57]
-          #   controlPoints: [[0,0.8,0]]
-          targetFrame:
-            robot: robot_1
-            frame: l_wrist
-            translation: [0.,0.,0.]
-            rotation: [-1.57,0,0]
-            controlPoints: [[0,0.8,0]]
-          stiffness: 100
-          dimWeight: [1,1,1,1,1,1]
-          weight: 10
-          duration : 5
-          completion:
-            timeElapsed: true
+Human_2_HandTrajTasks:
+  base: MetaTasks
+  tasks:
+    Human_2_Right:
+      type: bspline_trajectory
+      name: Human_2_LeftHand_traj
+      robot: human_2
+      frame: RHandLink
+      unactiveJoints: ["Root"]
+        # targetFrame:
+        #   robot: robot_1
+        #   frame: L_SHOULDER_Y_LINK
+        #   translation: [0.,0.1,-0.15]
+        #   rotation: [0.,-1.57,-1.57]
+        #   controlPoints: [[0,0.8,0]]
+      targetFrame:
+        robot: robot_1
+        # frame: l_wrist
+        frame: LARM_LINK6  #for hrp2
+        translation: [0., 0.1, -0.15]
+        rotation: [-1.57, 0, 0]
+        controlPoints: [[0, 0.8, 0]]
+      stiffness: 100
+      dimWeight: [1, 1, 1, 1, 1, 1]
+      weight: 10
+      duration: 5
+      completion:
+        timeElapsed: true
+        eval: 1e-2
+    Human_2_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_2
+      weight: 5
 
-  Human::ReachPose:
-    base: Meta
-    ResetPostures: true
-    transitions:
-      - [Human_1_HandTrajTasks,OK,Human_2_HandTrajTasks,Auto]
 
-  HumanHandTasks:
-    base: MetaTasks
-    tasks:
-      Human_1_Left:
-          type: transform
-          name: Human_1_RightHand
-          robot: human_1
-          frame: LHandLink
-          stiffness: 100
-          weight: 10
-          unactiveJoints: ["Root"]
-          completion:
-            eval: 1e-2
-      Human_2_Right:
-          type: transform
-          name: Human_2_LeftHand
-          robot: human_2
-          frame: RHandLink
-          unactiveJoints: ["Root"]
-          stiffness: 100
-          weight: 10
-          duration : 5
-          completion:
-            eval: 1e2
+HumanPostures:
+  base: MetaTasks
+  tasks:
+    Human_1_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_1
+      weight: 10
+    Human_2_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_2
+      weight: 10
 
-  HumanEstimation_1:
-    base: HumanPoseEstimation
-    human_indx: 0
-    target_limbs: [LeftHand,LeftArm]
-    # target_limbs: []
-    stiffness: 50
 
-  HumanEstimation_2:
-    base: HumanEstimation_1
-    human_indx: 1
-    target_limbs: [RightHand,RightArm]
-    # target_limbs: []
 
-  HumanPoseData_human_2:
-    base: HumanPose
-    human_indx : 1
-    human_devices: [["RightHand_human_2","RightHand"],["RightArm_human_2","RightArm"],["Pelvis_human_2","Pelvis"]] #Devices names on human [device, limb]
-    robot_device: "Robot_HRP4" #Device name attached to the robot
-    robot_link: "NECK_P_LINK" #Robot link on which the device is attached
-    link_sensor_transfo: #Transfo from link frame to sensor frame
-      robot_1:
-        rotation: [3.14,0,1.57]
-        translation: [0,0,0.1]
-      robot_2:
-        rotation: [3.14,0,-3.14]
-        translation: [-0.0201461,0.0204169,0.219]
+Human::ReachPose:
+  base: Meta
+  ResetPostures: true
+  transitions:
+  - [Human_1_HandTrajTasks, OK, Human_2_HandTrajTasks, Auto]
 
-  HumanPoseData_human_1:
-    base: HumanPoseData_human_2
-    human_indx : 0
-    human_devices: [["LeftHand_human_1","LeftHand"],["LeftArm_human_1","LeftArm"],["Pelvis_human_1","Pelvis"]] #Devices names on human [device, limb]
-    robot_device: "Robot_RHPS1" #Device name attached to the robot
-    robot_link: "HEAD_P_LINK" #Robot link on which the device is attached
-    calibration:
-      robot_link: L_ELBOW_Y_LINK
-      device: LeftHand_human_1
-      link_calib_offset: #from human unified frame to robot frame
-        translation: [0.07,0.0,-0.25]
+HumanHandTasks:
+  base: MetaTasks
+  tasks:
+    Human_1_Left:
+      type: transform
+      name: Human_1_RightHand
+      robot: human_1
+      frame: LHandLink
+      stiffness: 100
+      weight: 10
+      unactiveJoints: ["Root"]
+      completion:
+        eval: 1e-2
+    Human_2_Right:
+      type: transform
+      name: Human_2_LeftHand
+      robot: human_2
+      frame: RHandLink
+      unactiveJoints: ["Root"]
+      stiffness: 100
+      weight: 10
+      duration: 5
+      completion:
+        eval: 1e-2
+
+    # Human_Torso:
+    #   type: orientation
+    #   frame: TorsoLink
+    #   unactiveJoints: ["Root"]
+    #   robot: human_1
+    #   weight: 300
+    # Human_Torso:
+    #   type: orientation
+    #   frame: TorsoLink
+    #   unactiveJoints: ["Root"]
+    #   robot: human_12
+    #   weight: 300
+
+HumanEstimation_1:
+  base: HumanPoseEstimation
+  human_indx: 0
+  target_limbs: [LeftHand, LeftArm]
+  # target_limbs: []
+  stiffness: 50
+
+HumanEstimation_2:
+  base: HumanEstimation_1
+  human_indx: 1
+  target_limbs: [RightHand, RightArm]
+  # target_limbs: []
+
+HumanPoseData_human_2:
+  base: HumanPose
+  human_indx: 1
+  human_devices: [["RightHand_human_2", "RightHand"], ["RightArm_human_2", "RightArm"], ["Pelvis_human_2",
+      "Pelvis"]]                                                                                                      #Devices names on human [device, limb]
+  robot_device: "Robot_2" #Device name attached to the robot
+  robot_link: Head #Robot link on which the device is attached
+  link_sensor_transfo: #Transfo from link frame to sensor frame
+    robot_1:
+      rotation: [3.14, 0, 1.57]
+      # translation: [0, 0, 0.1]
+      translation: [0.05, 0, 0.235] #for hrp2
+    robot_2:
+      rotation: [3.14, 0, -3.14]
+      translation: [0.05, 0.0, 0.219]
+  calibration:
+    robot_link: LeftHand
+    device: RightHand_human_2
+    link_calib_offset: #from human unified frame to robot frame
+      translation: [0, 0.05, -0.06] #for hrp2
+
+
+HumanPoseData_human_1:
+  base: HumanPoseData_human_2
+  human_indx: 0
+  human_devices: [["LeftHand_human_1", "LeftHand"], ["LeftArm_human_1", "LeftArm"], ["Pelvis_human_1",
+      "Pelvis"]]                                                                                                  #Devices names on human [device, limb]
+  robot_device: "Robot_RHPS1" #Device name attached to the robot
+  robot_link: Head #Robot link on which the device is attached
+  calibration:
+    robot_link: RightHand
+    device: LeftHand_human_1
+    link_calib_offset: #from human unified frame to robot frame
+      # translation: [0.07, 0.0, -0.25]if forearm
+      translation: [0.07, -0.07, -0.03]

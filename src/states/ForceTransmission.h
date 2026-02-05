@@ -133,6 +133,9 @@ struct ForceTransmission : mc_control::fsm::State
   biRobotTeleop::Limbs robot_limb_; // robot limb in contact
   std::vector<std::string> force_sensor_limbs_;
 
+  const mc_rbdyn::Robot * human_1_estimated_ = nullptr;
+  const mc_rbdyn::Robot * human_2_estimated_ = nullptr;
+
   sva::ForceVecd measured_force_ =
       sva::ForceVecd::Zero(); // measured force in the link frame unified according to robotPose offsets
 

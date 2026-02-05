@@ -1,69 +1,75 @@
-  RobotArm_1:
-    base: RelativePose
-    robot_name: robot_1
-    human_indx: 0
-    human_targetLimb: LeftArm
-    robot_refFrame: body
-    completion_eval: 5e-3
-    human_robot_RefTransfo:
-      translation: [0.,0.,0.]
-      rotation: [0.,0.,0.]
-    human_robot_TargetTransfo:
-      translation: [0.,0.,0.]
-      rotation: [0,0.,0.]
-    variable_stiffness:
-      duration_to_full: 2
-      duration_at_low: 3
-      low: 1
-    task:
-      type: transform
-      unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
-      frame: L_SHOULDER_Y_LINK
-      dimWeight: [1,1,1,0,0,0]
-      weight: 200
-      stiffness: 5
-    completion_eval: 1e4
+---
+RobotArm_1:
+  base: RelativePose
+  robot_name: robot_1
+  human_indx: 0
+  human_targetLimb: LeftArm
+  robot_refFrame: Pelvis
+  completion_eval: 5e-3
+  human_robot_RefTransfo:
+    translation: [0., 0., 0.]
+    rotation: [0., 0., 0.]
+  human_robot_TargetTransfo:
+    translation: [0., 0., 0.]
+    # rotation: [0, 0., 0.] # for simple_human
+    rotation: [-1.57, 0., 3.14] # for human
+  variable_stiffness:
+    duration_to_full: 2
+    duration_at_low: 3
+    low: 1
+  task:
+    type: transform
+    unactiveJoints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2
+    # unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    frame: LeftArm
+    dimWeight: [1, 1, 1, 0, 0, 0]
+    weight: 200
+    stiffness: 5
 
-  RobotArm_2:
-    base: RobotArm_1
-    robot_name: robot_2
-    human_indx: 1
-    human_targetLimb: RightArm
-    robot_refFrame: BODY
-    human_robot_RefTransfo:
-      translation: [0.,0.,0.]
-      rotation: [0.,0.,0.]
-    human_robot_TargetTransfo:
-      translation: [0.,0.,0.]
-      rotation: [0,0.,0.]
-    task:
-      type: transform
-      unactiveJoints: ["Root","CHEST_P","CHEST_Y"]
-      frame: R_SHOULDER_Y_LINK
-      dimWeight: [1,1,1,0,0,0]
-      weight: 200
+RobotArm_2:
+  base: RobotArm_1
+  robot_name: robot_2
+  human_indx: 1
+  human_targetLimb: RightArm
+  robot_refFrame: Pelvis
+  human_robot_RefTransfo:
+    translation: [0., 0., 0.]
+    rotation: [0., 0., 0.]
+  human_robot_TargetTransfo:
+    translation: [0., 0., 0.]
+    rotation: [-1.57, 0., 0.] # for human
+    # rotation: [0, 0., 0.] # for simple_human
+  task:
+    type: transform
+    unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    frame: RightArm
+    dimWeight: [1, 1, 1, 0, 0, 0]
+    weight: 200
 
 
-  RobotForearm_1:
-    base: RobotArm_1
-    human_targetLimb: LeftForearm
-    task:
-      frame: L_ELBOW_P_LINK
+RobotForearm_1:
+  base: RobotArm_1
+  human_targetLimb: LeftForearm
+  task:
+    frame: LeftForearm
 
-  RobotForearm_2:
-    base: RobotArm_2
-    human_targetLimb: RightForearm
-    task:
-      frame: R_ELBOW_Y_LINK
+RobotForearm_2:
+  base: RobotArm_2
+  human_targetLimb: RightForearm
+  task:
+    frame: RightForearm
 
-  RobotHand_1:
-    base: RobotArm_1
-    human_targetLimb: LeftHand
-    task:
-      frame: l_wrist
+RobotHand_1:
+  base: RobotArm_1
+  human_targetLimb: LeftHand
+  human_robot_TargetTransfo:
+    # rotation: [0, 0., 0.] # for simple_human
+    rotation: [1.57, 0., 0] # for human
+  task:
+    frame: LeftHand
 
-  RobotHand_2:
-    base: RobotArm_2
-    human_targetLimb: RightHand
-    task:
-      frame: R_WRIST_Y_LINK
+RobotHand_2:
+  base: RobotArm_2
+  human_targetLimb: RightHand
+  task:
+    frame: RightHand

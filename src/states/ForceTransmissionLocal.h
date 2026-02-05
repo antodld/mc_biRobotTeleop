@@ -53,6 +53,15 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   bool checkActivation(mc_control::fsm::Controller & ctl_, const int robot_indx);
 
+  sva::ForceVecd replaceForceTorque(sva::ForceVecd target);
+  void getestimatedContactWrench(mc_control::fsm::Controller & ctl_,
+                                                         const std::string & surface);
+
+  sva::ForceVecd transformExternalWrench(const sva::ForceVecd wrench,
+                                                                     const std::string surface, int rIndex);
+
+  void getestimatedExternalWrench(mc_control::fsm::Controller & ctl_);
+
   double dt_ = 5e-3;
 
   std::shared_ptr<mc_tasks::force::DampingTask> task_a_;
@@ -67,6 +76,9 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   biRobotTeleop::Limbs limb_a_ = biRobotTeleop::Limbs::Head; // limbs of task on robot a
   biRobotTeleop::Limbs limb_b_ = biRobotTeleop::Limbs::Head; // limbs of task on robot b
+
+  const mc_rbdyn::Robot * human_1_estimated_ = nullptr;
+  const mc_rbdyn::Robot * human_2_estimated_ = nullptr;
 
   bool done_ = false;
 
@@ -99,4 +111,25 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   double force_activation_threshold_ = 10; // force threshold on which the force control is activated;
   double distance_activation_threshold_ = 0.02;
   double deactivation_threshold_ = 0.15; // distance threshold on which the force control is deactivated
+
+private:
+  std::string robot_;
+  bool exportContactWrench_ = true;
+  bool exportExternalWrench_ = true;
+  int MaxContacts_ = 4;
+  std::string usingWrench_ = "Sensor";
+
+  bool addPlot_ = false;
+
+  sva::ForceVecd estimatedContactWrench_;
+  sva::ForceVecd estimatedContactWrench_sensorFrame_;
+
+  sva::ForceVecd estimatedExternalWrench_centroid_;
+  mc_control::MCController * controller_;
+
+  sva::ForceVecd estimationError_;
+
+  sva::ForceVecd surfaceWrench_;
+
+  sva::PTransformd worldCentroidKinePTrans_;
 };

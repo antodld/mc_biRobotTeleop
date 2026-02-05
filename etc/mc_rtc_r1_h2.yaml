@@ -1,0 +1,54 @@
+---
+MainRobot:
+  name: robot_1 # for robot_1
+  module: HRP2DRC # desired robot module
+  # module: HRP4::ImpactGrippers
+Enabled: BiRobotTeleoperation
+Log: false
+
+Timestep: 0.005
+
+GUIServer:
+  # Enable: false
+  IPC:
+    Socket: /tmp/mc_rtc3
+  TCP:
+    # Binding host, * binds to all interfaces
+    Host: "*"
+    # Binding ports, the first is used for PUB socket and the second for
+    # the PULL socket
+    Ports: [4545, 4646]
+    Timestep: 0.005
+
+#Server on which my data is going to be published
+server:
+  ip: "*"
+  sub_port: 4342
+  pub_port: 4243
+
+distant_controller:
+  # ip: 150.18.226.5 #host address of the distant controller
+  ip: 192.168.245.128
+  sub_port: 4346   #should be the pub port of the distant server
+  pub_port: 4245
+  human_name: human_1 #or human_1
+  display_human_pose: true
+local_controller:
+  human_name: human_2 #or human_2
+  display_human_pose: true
+
+human_sim:
+  active: false #if true the sensor data are overwritten by an external human controller
+  ip: localhost #host address of the simulated human controller
+  sub_port: 4545
+  pub_port: 4646
+
+UDP:
+  host: hrp4005c
+  port: 4444
+  IgnoredJoints:
+    joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
+
+OpenVRPlugin:
+  distantData:
+    local_port: 33333

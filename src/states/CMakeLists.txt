@@ -1,4 +1,6 @@
 add_fsm_state_simple(BiRobotTeleoperation_Initial)
+add_fsm_state_simple(TeleopSequence)
+target_link_libraries(TeleopSequence PUBLIC mc_rtc::fsm::states::Parallel)
 add_fsm_state_simple(BiRobotTeleoperation_Task)
 add_fsm_state_simple(HandDamping)
 add_fsm_state_simple(JointsDamping)
@@ -7,6 +9,7 @@ add_fsm_state_simple(ForceDisplay)
 add_fsm_state_simple(ChooseTransition)
 add_fsm_state_simple(HumanPoseEstimation)
 add_fsm_state_simple(HumanPose)
+# XXX: disable for now, adapt to changes in convex
 add_fsm_state_simple(ForceTransmission)
 add_fsm_state_simple(ForceTransmissionLocal)
 

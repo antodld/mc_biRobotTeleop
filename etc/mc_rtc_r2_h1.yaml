@@ -1,0 +1,49 @@
+---
+MainRobot:
+  name: robot_2 # for robot_1
+  module: RHPS1_sake2_sake2 #_forceshoe_forceshoe_lirmm_lirmm # desired robot module
+Enabled: BiRobotTeleoperation
+Log: false
+
+Timestep: 0.002
+
+GUIServer:
+  IPC:
+    Socket: /tmp/mc_rtc
+  TCP:
+    # Binding host, * binds to all interfaces
+    Host: "*"
+    # Binding ports, the first is used for PUB socket and the second for
+    # the PULL socket
+    Ports: [4242, 4343]
+    Timestep: 0.005
+
+server:
+  ip: "*"
+  sub_port: 4245
+  pub_port: 4346
+
+distant_controller:
+  # ip: 150.18.226.5 #host address of the distant controller
+  ip: 192.168.245.128
+  sub_port: 4243
+  pub_port: 4342
+  human_name: human_2 #or human_1
+  display_human_pose: true
+local_controller:
+  human_name: human_1 #or human_2
+  display_human_pose: true
+
+human_sim:
+  active: false #if true the sensor data are overwritten by an external human controller
+  ip: localhost #host address of the simulated human controller
+  sub_port: 4242
+  pub_port: 4343
+
+UDP:
+  host: rhps1
+  port: 4444
+
+OpenVRPlugin:
+  distantData:
+    local_port: 33334

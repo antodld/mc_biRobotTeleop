@@ -75,13 +75,18 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   const unsigned int r2 = ctl.robots().robot(r2_name_).robotIndex();
   const unsigned int r1 = ctl.robots().robot(r1_name_).robotIndex();
 
+  const auto & human_1_estimated = ctl.external_robots_->robot("human_1_estimated");
+  const auto & human_2_estimated = ctl.external_robots_->robot("human_2_estimated");
+
   const auto & global_config = ctl.getGlobalConfig();
   for(size_t k = 0; k < r1_links_.size(); k++)
   {
-    std::shared_ptr<mc_tasks::biRobotTeleopTask> task =
-        std::make_shared<mc_tasks::biRobotTeleopTask>(ctl.solver(), r1, r2, r1_links_[k], r2_links_[k]);
+    std::shared_ptr<mc_tasks::biRobotTeleopTask> task = std::make_shared<mc_tasks::biRobotTeleopTask>(
+        ctl.solver(), r1, r2, human_1_estimated, human_2_estimated, r1_links_[k], r2_links_[k]);
+    task->setMode(ctl_.config()("mode"));
     task->load(ctl.solver(), state_config_);
     task->updateRobotLinksMap(ctl.r_1_, ctl.r_2_);
+    task->updateHumanLimbMap(global_config("human")("limb_map"));
     if(global_config.has("human_1"))
     {
       if(global_config.has("human_2"))

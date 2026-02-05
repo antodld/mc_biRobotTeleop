@@ -22,6 +22,9 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   std::string robot_name = ctl_.robots().robot(0).name();
 
+  human_1_estimated_ = & ctl.external_robots_->robot("human_1_estimated");
+  human_2_estimated_ = & ctl.external_robots_->robot("human_2_estimated");
+
   dt_ = ctl_.timeStep;
 
   config_(robot_name)("force_sensor_limbs", force_sensor_limbs_);
@@ -320,10 +323,15 @@ Eigen::Vector3d ForceTransmission::getContactDistance(mc_control::fsm::Controlle
   const auto h = ctl.getHumanPose(ctl.getHumanIndx());
   const auto r = ctl.getRobotPose(ctl.getHumanIndx());
 
-  auto human_cvx = h.getConvex(limb_human);
+  auto human_cvx = h.getConvex(limb_human, *human_1_estimated_);
+
+  if(ctl.getHumanIndx() == 1)
+  {
+    human_cvx = h.getConvex(limb_human, *human_2_estimated_);
+  }
   auto robot_cvx = robot.convex(r.getConvexName(limb_robot));
 
-  sch::CD_Pair pair_limb_frame(&human_cvx, robot_cvx.second.get());
+  sch::CD_Pair pair_limb_frame(human_cvx.get(), robot_cvx.second.get());
 
   sch::Point3 p1, p2;
   pair_limb_frame.getClosestPoints(p1, p2);

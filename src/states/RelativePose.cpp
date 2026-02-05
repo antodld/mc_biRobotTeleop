@@ -28,7 +28,12 @@ void RelativePose::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const mc_rbdyn::Robot & robot = ctl_.robots().robot(r_name_);
-  std::string frame = stateConfig_("task")("frame");
+  biRobotTeleop::RobotPose r = (r_name_ == "robot_1") ? ctl.r_1_ : ctl.r_2_;
+
+  robotRefFrame_ = r.getLinksMap().at(biRobotTeleop::str2Limb(robotRefFrame_));
+
+  std::string frameName = stateConfig_("task")("frame");
+  std::string frame = r.getLinksMap().at(biRobotTeleop::str2Limb(frameName));
   task_ = std::make_shared<mc_tasks::TransformTask>(robot.frame(frame));
 
   task_->load(ctl_.solver(), stateConfig_("task"));
@@ -52,7 +57,6 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   if(h.limbActive(biRobotTeleop::Limbs::Pelvis) && h.limbActive(humanTargetLimb_))
   {
-
     const double t_active = static_cast<double>(count_) * dt_;
     if(t_active < low_stiff_duration_)
     {

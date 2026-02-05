@@ -1,37 +1,33 @@
 ---
-# If true, the FSM transitions are managed by an external tool
 Managed: false
-# If true and the FSM is self-managed, transitions should be triggered
 StepByStep: true
-# Change idle behaviour, if true the state is kept until transition,
-# otherwise the FSM holds the last state until transition
 IdleKeepState: false
-# Where to look for state libraries
 
 StatesLibraries:
 - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@"
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@"
-# Where to look for state files
 StatesFiles:
 - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@/data"
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
-# If true, state factory will be more verbose
 VerboseStateFactory: false
+
+# mode: SimulationSingle
+# mode: SingleVR
+mode: DualVR
+
+# human or simple_human
+# estimation_module: simple_human
+estimation_module: human
+
 # Additional robots to load
 robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4::ImpactGrippers
+    # module: HRP4::ImpactGrippers
+    module: HRP2DRC  #for hrp2
   robot_2:
-    module: RHPS1
-  # human_1:
-  #   module: human
-  # human_2:
-  #   module: human
-
-#mc_humanMap.yaml
-@HumanMap.yaml
+    module: RHPS1_sake2_sake2  #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
 
 # General constraints, always on
 constraints:
@@ -47,6 +43,7 @@ constraints:
 # - type: dynamics
 #   robot: robot_2
 # Collision constraint
+collisions: []
 # collisions:
 # - type: collision
 #   r1: robot_1
@@ -58,53 +55,76 @@ constraints:
 #   useMinimal: true
 
 collisions_with_joint_selection:
-  robot_2:
-    iDist: 0.01
-    sDist: 0.005
-    simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK,
-                           L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
-                           L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK,
-                           R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK, R_ELBOW_P_LINK,
-                           R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK,
-                           L_CROTCH_P_LINK ,
-                           R_CROTCH_P_LINK ,
-                           R_KNEE_P_LINK, L_KNEE_P_LINK]
+  rhps1:
+    iDist: 0.02
+    sDist: 0.01
+    simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
+      L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK,
+      R_ELBOW_Y_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK, R_KNEE_P_LINK,
+      L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK]
-      b2: [R_CROTCH_P_LINK , L_CROTCH_Y_LINK , BODY, HEAD_P_LINK, CHEST_P_LINK]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_Y_LINK]
+      b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R]
-    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK]
-      b2: [R_CROTCH_P_LINK , L_CROTCH_Y_LINK , BODY, HEAD_P_LINK, CHEST_P_LINK]
+    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_Y_LINK, R_WRIST_Y_LINK]
+      b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
-    - b1: [R_ELBOW_P_LINK]
-      b2: [L_ELBOW_P_LINK]
+    - b1: [R_ELBOW_Y_LINK]
+      b2: [L_ELBOW_Y_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
-    - b1: [ L_CROTCH_P_LINK]
-      b2: [ R_CROTCH_P_LINK]
+    - b1: [L_CROTCH_P_LINK]
+      b2: [R_CROTCH_P_LINK]
       joints: []
-  robot_1:
-    iDist: 0.01
-    sDist: 0.005
-    simplified_all_bodies: [body, NECK_P_LINK, torso,
-                           L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
-                           L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, L_WRIST_P_LINK,
-                           R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK, R_ELBOW_P_LINK,
-                           R_WRIST_Y_LINK, r_wrist, R_WRIST_P_LINK,
-                           L_HIP_P_LINK ,
-                           R_HIP_P_LINK ,
-                           R_KNEE_P_LINK, L_KNEE_P_LINK]
+  hrp4:
+    iDist: 0.02
+    sDist: 0.01
+    simplified_all_bodies: [body, NECK_P_LINK, torso, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
+      L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, L_WRIST_P_LINK, R_SHOULDER_P_LINK, R_SHOULDER_R_LINK,
+      R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, R_WRIST_Y_LINK, r_wrist, R_WRIST_P_LINK, L_HIP_P_LINK, R_HIP_P_LINK,
+      R_HIP_Y_LINK, R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, l_wrist]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , body, torso]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, L_WRIST_Y_LINK, l_wrist]
+      b2: [L_HIP_P_LINK, L_HIP_Y_LINK, body, torso, NECK_P_LINK, R_HIP_Y_LINK, R_HIP_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R, L_WRIST_P]
     - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, r_wrist]
-      b2: [R_HIP_P_LINK , L_HIP_Y_LINK , body, torso]
+      b2: [R_HIP_P_LINK, L_HIP_Y_LINK, body, torso]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
     - b1: [R_ELBOW_P_LINK, r_wrist]
       b2: [L_ELBOW_P_LINK, l_wrist]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
-    - b1: [ L_HIP_P_LINK]
-      b2: [ R_HIP_P_LINK]
+    - b1: [L_HIP_P_LINK]
+      b2: [R_HIP_P_LINK]
+      joints: []
+  hrp2_drc:
+    iDist: 0.02
+    sDist: 0.01
+    #maybe add head link 0 (le cou)
+    simplified_all_bodies: [BODY, HEAD_LINK1, CHEST_LINK1, LARM_LINK1, LARM_LINK0, LARM_LINK2, LARM_LINK3,
+      LARM_LINK4, LARM_LINK5, LARM_LINK6, LARM_LINK7, RARM_LINK1, RARM_LINK0, RARM_LINK2, RARM_LINK3,
+      RARM_LINK4, RARM_LINK6, RHAND_LINK2, RHAND_LINK4, RHAND_LINK3, RARM_LINK7, RARM_LINK5, LLEG_LINK0,
+      RLEG_LINK0, RLEG_LINK2, LLEG_LINK2]
+    cstr_sets:
+    - b1: [LARM_LINK2, LARM_LINK3, LARM_LINK4, LARM_LINK6, LHAND_LINK2, LHAND_LINK4, LHAND_LINK3, LARM_LINK7]
+      b2: [LLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1, HEAD_LINK1]
+      joints: [LARM_JOINT0, LARM_JOINT1, LARM_JOINT2, LARM_JOINT3, LARM_JOINT4, LARM_JOINT5, LARM_JOINT6]
+    - b1: [LHAND_LINK2, LHAND_LINK4, LHAND_LINK3, LARM_LINK7]
+      b2: [LARM_LINK1, LARM_LINK0]
+      joints: [LARM_JOINT0, LARM_JOINT1, LARM_JOINT2, LARM_JOINT3, LARM_JOINT4, LARM_JOINT5, LARM_JOINT6,
+        LHAND_JOINT1, LHAND_JOINT2, LHAND_JOINT3, LHAND_JOINT4, LHAND_JOINT5]
+
+    - b1: [RARM_LINK2, RARM_LINK3, RARM_LINK4, RARM_LINK6, RHAND_LINK2, RHAND_LINK4, RHAND_LINK3, RARM_LINK7]
+      b2: [RLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1, HEAD_LINK1]
+      joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6]
+    - b1: [RHAND_LINK2, RHAND_LINK4, RHAND_LINK3, RARM_LINK7]
+      b2: [RARM_LINK1, RARM_LINK0]
+      joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6,
+        RHAND_JOINT1, RHAND_JOINT2, RHAND_JOINT3, RHAND_JOINT4, RHAND_JOINT5]
+
+    - b1: [RARM_LINK3, RARM_LINK6]
+      b2: [LARM_LINK3, LARM_LINK6]
+      joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6]
+    - b1: [LLEG_LINK2]
+      b2: [RLEG_LINK2]
       joints: []
 
 contacts:
@@ -125,55 +145,40 @@ contacts:
   r1Surface: RightFoot
   r2Surface: AllGround
 
-@Observers.yaml
+# These files are merged with the 'states' element of this FSM configuration
+IncludeStates:
+- HalfSitting.yaml
+- BiRobotTasks.yaml
+- ForcesTasks.yaml
+- DampingTasks.yaml
+- HumanTasks.yaml
+- RobotTeleopTasks.yaml
+- ForcesDisplay.yaml
+- JointsDamping.yaml
+- Stabilizer.yaml
 
-@RobotLimbMap.yaml
-
-human:
-  limb_map:
-    left_hand: "LHandLink"
-    right_hand: "RHandLink"
-    left_arm: "LArmLink"
-    right_arm: "RArmLink"
-    left_forearm: "LForearmLink"
-    right_forearm: "RForearmLink"
-    pelvis: "HipsLink"
-
+# These files are merged with the root element of this FSM configuration
+IncludeGlobals:
+- RobotLimbMap.yaml
+- HumanLimbMap.yaml
 
 states:
-
-@HalfSitting.yaml
-
-@BiRobotTasks.yaml
-
-@ForcesTasks.yaml
-
-@DampingTasks.yaml
-
-@HumanTasks.yaml
-
-@RobotTeleopTasks.yaml
-
-@ForcesDisplay.yaml
-
-@JointsDamping.yaml
-
-@Stabilizer.yaml
-
   Human::Trajectory:
     base: Parallel
     states:
-      - HumanHandTrajTasks
+    - HumanHandTrajTasks
 
   Human::Free:
     base: Parallel
     states:
-      - HumanHandTasks
+    - HumanHandTasks
+    - HumanPostures
 
   Human:
     base: Meta
     transitions:
-      - [Human::ReachPose,OK,Human::Free,Auto]
+    # - ["Human::ReachPose", OK, "Human::Free", Auto]
+    - ["HumanPostures", OK, "Human::Free", Auto]
 
   ChoiceMain:
     base: ChooseTransition
@@ -182,8 +187,8 @@ states:
       Start Teleop: TELEOP
       Go halfsit: HALFSIT
     fix_robot: false
-    joystick_action: [["Y","HALFSIT"],["A","TELEOP"]] #[button,action]
-    robots: ["robot_1","robot_2"]
+    joystick_action: [["Y", "HALFSIT"], ["A", "TELEOP"]] #[button,action]
+    robots: ["robot_1", "robot_2"]
     task:
       weight: 00
       stiffness: 20
@@ -194,7 +199,7 @@ states:
     actions:
       Start Bi Robot Teleop: BI-ROBOT-TELEOP
       Cancel: CANCEL
-    joystick_action: [["Y","CANCEL"],["A","BI-ROBOT-TELEOP"]]
+    joystick_action: [["Y", "CANCEL"], ["A", "BI-ROBOT-TELEOP"]]
     fix_robot: false
 
   ChoiceBiTeleop:
@@ -202,13 +207,13 @@ states:
     category: []
     actions:
       Cancel: CANCEL
-    joystick_action: [["Y","CANCEL"]]
+    joystick_action: [["Y", "CANCEL"]]
 
   BiRobot::Teleop:
     base: Parallel
     states:
     - BiTeleopTask_1
-    # - BiTeleopTask_2
+    - BiTeleopTask_2
     - Forces
     - ChoiceBiTeleop
     delays:
@@ -240,24 +245,33 @@ states:
     base: Meta
     ResetPostures: true
     transitions:
-      - [ChoiceMain, HALFSIT, GoHalfSitting, Auto]
-      - [GoHalfSitting, OK, ChoiceMain, Auto]
-      - [ChoiceMain, TELEOP, Teleop::Sequence, Auto]
-      - [Teleop::Sequence,CANCEL,ChoiceMain,Auto]
+    - [ChoiceMain, HALFSIT, GoHalfSitting, Auto]
+    - [GoHalfSitting, OK, ChoiceMain, Auto]
+    - [ChoiceMain, TELEOP, "Teleop::Sequence", Auto]
+    - ["Teleop::Sequence", CANCEL, ChoiceMain, Auto]
 
   Teleop::Sequence:
-    base: Parallel
+    base: TeleopSequence
+
+    # states for all modes
     states:
-      - Robot::Teleop
-      # - Human
-      - biTeleop::Sequence
+    - Robot::Teleop
+    - biTeleop::Sequence
+
+    # Override states for specific modes
+    Mode:
+      SimulationSingle:
+        states:
+        - Robot::Teleop
+        - Human   # adds tasks on human robot
+        - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
 
   biTeleop::Sequence:
     base: Meta
     transitions:
-      - [ChoiceTeleop, BI-ROBOT-TELEOP, BiRobot::Teleop, Auto]
+    - [ChoiceTeleop, BI-ROBOT-TELEOP, "BiRobot::Teleop", Auto]
       # - [BiRobot::Teleop, CANCEL, ChoiceTeleop, Auto]
       # - [BiRobot::Teleop, OK, ChoiceTeleop, Auto]
 
@@ -272,13 +286,35 @@ states:
     - RobotHand_2
 
   MainState:
-    base: Parallel
+    base: TeleopSequence
+
+    # Default states (if not specified per-mode)
     states:
     - HumanPoseData_human_2
     - HumanPoseData_human_1
     - HumanEstimation_1
     - HumanEstimation_2
     - Teleop::Main
+
+    robot_1:
+      Mode:
+        DualVR:
+          states:
+          - HumanPoseData_human_2
+          # - HumanPoseData_human_1
+          - HumanEstimation_1
+          - HumanEstimation_2
+          - Teleop::Main
+
+    robot_2:
+      Mode:
+        DualVR:
+          states:
+          # - HumanPoseData_human_2
+          - HumanPoseData_human_1
+          - HumanEstimation_1
+          - HumanEstimation_2
+          - Teleop::Main
 
 transitions:
 - [BiRobotTeleoperation_Initial, OK, MainState, Auto]
@@ -302,8 +338,66 @@ UDPPlugin:
       port: 4444
       ignoredJoints:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
+    robot_2:
+      host: rhps1
+      port: 4444
 
-# Replay
-# UDPPlugin
-# OpenVRPlugin
-Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
+OpenVRPlugin:
+  deviceMap: #[name ; ID]
+
+  ## for LIRMM
+  # - ["RightArm_human_2", "LHR-9F12939E"]
+  # - ["RightHand_human_2", "LHR-A9EEA216"]
+  # - ["LeftArm_human_1", "LHR-A108F2F9"]
+  # - ["LeftHand_human_1", "LHR-A469DE6D"]
+  # - ["Pelvis_human_2", "LHR-E488461D"]
+  # - ["base station", "LHB-9D7575BD"]
+  # - ["base station 2", "LHB-49EE85A8"]
+  # - ["Head", "LHR-AF7F4782"]
+  # - ["Robot_HRP4", "LHR-659508D3"]
+  # - ["Robot_RHPS1", "LHR-D756B287"]
+  # - ["Pelvis_human_1", "LHR-66106DA7"]
+
+
+  - ["RightArm_human_2", "LHR-5866134B"]
+  - ["RightHand_human_2", "LHR-DC90393E"]
+  - ["Pelvis_human_2", "LHR-58687408"]
+  - ["Robot_2", "LHR-D59475BF"]  # this one is placed on hrp2's head
+
+  - ["LeftArm_human_1", "LHR-4D18CA04"]
+  - ["LeftHand_human_1", "LHR-61340B59"]
+  - ["Robot_RHPS1", "LHR-5C54DCD3"]
+  # - ["Robot_RHPS1", "LHR-D59475BF"]
+  - ["Pelvis_human_1", "LHR-1115D9EA"]
+
+
+  sleep: 10 #ms
+
+  localData: false
+  distantData:
+    port: 12338
+    # ip: 150.18.226.6
+    # ip: 192.168.240.39
+    ip: 192.168.245.128
+
+    # max_packet_size: 10
+    verbose: false
+
+
+# Plugins are overridden per-mode by Plugins.yaml
+# Plugin configuration is merged with the above default configurations per-mode
+Plugins: []
+
+
+RobotModelUpdate:
+  pluginName: RobotModelUpdate_human_1_estimated
+  publishVisual: true
+  publishConvex: false
+  defaultConfig:
+    human: Alice
+RobotModelUpdate2:
+  pluginName: RobotModelUpdate_human_2_estimated
+  publishVisual: true
+  publishConvex: false
+  defaultConfig:
+    human: Arnaud

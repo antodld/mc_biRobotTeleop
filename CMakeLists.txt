@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 4.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 14)
@@ -21,7 +21,6 @@ set(INSTALL_PKG_CONFIG_FILE
 set(CXX_DISABLE_WERROR ON)
 
 # include(cmake/base.cmake)
-include(insert_content.cmake)
 
 # Check if the project is built inside mc_rtc
 if(NOT TARGET mc_rtc::mc_control)
@@ -52,16 +51,18 @@ foreach(
   HalfSitting
   HumanMap
   mc_humanMap
+  mc_humanMap_SimulationSingle
   Observers
   Stabilizer
   ForcesTasks
-  RobotLimbMap)
+  RobotLimbMap
+  HumanLimbMap)
 
   configure_file(etc/${FILE}.in.yaml
                  "${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml" @ONLY)
-  insert_content(${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml
-                 ${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml ${FILE}.yaml)
 endforeach()
+# install( FILES "etc/mc_rtc.yaml" DESTINATION
+# "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc/BiRobotTeleoperation" )
 
 configure_file(etc/log-to-datastore.in.yaml
                "${CMAKE_CURRENT_BINARY_DIR}/etc/log-to-datastore.yaml")

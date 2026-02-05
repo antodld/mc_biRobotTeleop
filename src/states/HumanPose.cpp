@@ -7,20 +7,16 @@
 #include "../BiRobotTeleoperation.h"
 #include <mc_joystick_plugin/joystick_inputs.h>
 
-void HumanPose::configure(const mc_rtc::Configuration & config)
+void HumanPose::start(mc_control::fsm::Controller & ctl_)
 {
-
-  config_.load(config);
+  viveTrackerModule_ = mc_rbdyn::RobotLoader::get_robot_module("vive_tracker_blue");
+  viveTrackersRobots_ = mc_rbdyn::Robots::make();
   if(config_.has("calibration"))
   {
     config_("calibration")("robot_link", calibration_robot_link_);
     config_("calibration")("device", calibration_device_);
     config_("calibration")("link_calib_offset", link_calib_offset_);
   }
-}
-
-void HumanPose::start(mc_control::fsm::Controller & ctl_)
-{
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const auto & config = ctl.getGlobalConfig();
 
@@ -31,6 +27,16 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
   }
   robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
   mc_rtc::log::info("[{}] human is human_{}", name(), human_indx_ + 1);
+
+  biRobotTeleop::RobotPose r = (robot_name_ == "robot_1") ? ctl.r_1_ : ctl.r_2_;
+
+  if(config_.has("calibration"))
+  {
+    config_("calibration")("robot_link", calibration_robot_link_);
+    calibration_robot_link_ = r.getLinksMap().at(biRobotTeleop::str2Limb(calibration_robot_link_));
+    config_("calibration")("device", calibration_device_);
+    config_("calibration")("link_calib_offset", link_calib_offset_);
+  }
 
   offline_threshold_ = config("offline_threshold", 100);
 
@@ -55,6 +61,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
 
     config_("robot_device", robot_device_);
     config_("robot_link", robot_link_);
+    robot_link_ = r.getLinksMap().at(biRobotTeleop::str2Limb(robot_link_));
     config_("link_sensor_transfo")(robot_name_, X_link_sensor_);
   }
   else
@@ -65,27 +72,55 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
   }
 
   auto & gui = *ctl.gui();
-  gui.addElement(this, {"States", name(), "Robot sensor offset"},
+  gui.addElement(
+      this, {"States", name(), "Robot sensor offset"},
 
-                 mc_rtc::gui::ArrayInput(
-                     "translation [m]", {"x", "y", "z"},
-                     [this]() -> const Eigen::Vector3d & { return X_link_sensor_.translation(); },
-                     [this](const Eigen::Vector3d & t) { X_link_sensor_.translation() = t; }),
-                 mc_rtc::gui::ArrayInput(
-                     "rotation [deg]", {"r", "p", "y"}, [this]() -> Eigen::Vector3d
-                     { return mc_rbdyn::rpyFromMat(X_link_sensor_.rotation()) * 180. / mc_rtc::constants::PI; },
-                     [this](const Eigen::Vector3d & rpy)
-                     { X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.); }));
+      mc_rtc::gui::ArrayInput(
+          "translation [m]", {"x", "y", "z"},
+          [this]() -> const Eigen::Vector3d & { return X_link_sensor_.translation(); },
+          [this](const Eigen::Vector3d & t) { X_link_sensor_.translation() = t; }),
+      mc_rtc::gui::ArrayInput(
+          "rotation [deg]", {"r", "p", "y"}, [this]() -> Eigen::Vector3d
+          { return mc_rbdyn::rpyFromMat(X_link_sensor_.rotation().inverse()) * 180. / mc_rtc::constants::PI; },
+          [this](const Eigen::Vector3d & rpy)
+          { X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.).inverse(); }));
   if(!human_sim_)
   {
-    gui.addElement({"States", name(), "Robot sensor offset"},
-                   mc_rtc::gui::Transform("Expected robot sensor pose",
-                                          [this, &ctl_]() -> sva::PTransformd
-                                          {
-                                            mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
-                                            const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
-                                            return X_link_sensor_ * X_0_RobotLink;
-                                          }));
+    gui.addElement(
+        {"States", name(), "Robot sensor offset"},
+        mc_rtc::gui::Transform("Expected robot sensor pose",
+                               [this, &ctl_]() -> sva::PTransformd
+                               {
+                                 mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
+                                 const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
+                                 return X_link_sensor_
+                                        * X_0_RobotLink; // position du sensor du robot avec l'offset ds le repere monde
+                                                         // (calculée avec la pose du robot du controlleur)
+                               })); // X_0_robotTracker = pos récupérée par le tracker
+
+    for(auto & device : human_deviceTolimbs_)
+    {
+      gui.addElement({"States", name(), "Robot sensor offset"},
+                     mc_rtc::gui::Transform("sensor pose for " + device.first,
+                                            [this, &ctl, device]() -> sva::PTransformd
+                                            {
+                                              biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+                                              const biRobotTeleop::Limbs limb = device.second;
+                                              return h.getPose(limb);
+                                            }));
+      auto & viveRobot = viveTrackersRobots_->load(device.first, *viveTrackerModule_);
+      auto & gui = *ctl.gui();
+      gui.addElement({"States", name(), "Robot sensor offset"},
+                     mc_rtc::gui::Robot("Vive tracker sensor for " + device.first,
+                                        [this, &ctl, device, &viveRobot]() -> mc_rbdyn::Robot &
+                                        {
+                                          biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+                                          const biRobotTeleop::Limbs limb = device.second;
+                                          viveRobot.posW(h.getPose(limb));
+                                          return viveRobot;
+                                        }));
+    }
+
     gui.addElement({"States", name(), "Robot sensor offset", "Calibration"},
                    mc_rtc::gui::Button("Calibrate", [this, &ctl]()
                                        { calibrateSensorPose(ctl, calibration_robot_link_, calibration_device_); }));
@@ -114,11 +149,11 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
   biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
   mc_rbdyn::Robot & robot = ctl.robots().robot(robot_name_);
 
-  if(ctl.robots().hasRobot("human_1"))
-  {
-    output("True");
-    return true;
-  }
+  // if(ctl.robots().hasRobot("human_1"))
+  // {
+  //   output("True");
+  //   return true;
+  // }
 
   if(ctl.hp_rec_.online() && robot_name_ != ctl.robot().name())
   {
@@ -173,31 +208,35 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     const sva::PTransformd X_0_robotTracker = (has_tracker_func(robot_device_) && tracker_online_func(robot_device_))
                                                   ? tracker_pose_func(robot_device_)
                                                   : sva::PTransformd::Identity();
-
+    // std::cout << "xo robot racker for " << robot_device_ << " : \n" << X_0_robotTracker<<std::endl;
     const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
 
     for(auto & device : human_deviceTolimbs_)
     {
+
       if(has_tracker_func(device.first) && tracker_online_func(device.first))
       {
+        const biRobotTeleop::Limbs limb = device.second;
+
         const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device.first);
-        const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
+        const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv(); // tracker frame
         const sva::PTransformd X_0_tracker = X_robotTracker_tracker * X_link_sensor_ * X_0_RobotLink;
         // const sva::MotionVecd v_tracker = sva::PTransformd( (X_0_tracker * X_0_trackerRaw.inv()).rotation()  ) *
         // tracker_vel_func(device.first);
-        const sva::MotionVecd v_tracker =
-            sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
-        const biRobotTeleop::Limbs limb = device.second;
+
+        // X_0_tracker_filtered = lowPass_.eval(); // pour la securite... TODO
 
         if(checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker))
         {
-          // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous
-          // pose\n{}",name(),biRobotTeleop::limb2Str(limb),h.getPose(limb));
+          // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}", name(),
+          //                      biRobotTeleop::limb2Str(limb), h.getPose(limb));
           // mc_rtc::log::info(checkNorm(h.getPose(limb)));
           h.setVel(limb, sva::MotionVecd::Zero());
           if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))
           {
-            mc_rtc::log::warning("[{}] tracker on limb {} not received", name(), biRobotTeleop::limb2Str(limb));
+            mc_rtc::log::warning("[{}] tracker on limb {} not received, {}, {}, {}", name(),
+                                 biRobotTeleop::limb2Str(limb), checkNorm(X_0_robotTracker), checkNorm(X_0_trackerRaw),
+                                 checkNorm(X_0_tracker));
             h.setLimbActiveState(limb, false);
           }
           else if(online_data_count_[limb] < offline_threshold_)
@@ -207,6 +246,13 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         }
         else
         {
+          // mc_rtc::log::info("[{}] tracker on limb {} received", name(), biRobotTeleop::limb2Str(limb));
+
+          const sva::MotionVecd v_tracker =
+              sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
+
+          // init  : mc_filter::LowPass<sva::PTransformd>(dt_, 0.5)
+
           h.setPose(limb, X_0_tracker);
           h.setVel(limb, v_tracker);
           online_data_count_[limb] == 0;
@@ -216,10 +262,11 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     }
   }
 
-  if(human_sim_ && human_sim_rec_.getRobot().name() == "human")
+  if(human_sim_ && human_sim_rec_.robotName() == "human")
   {
-    const mc_rbdyn::Robot & human_robot = human_sim_rec_.getRobot();
-    ctl.updateHumanPose(human_robot, h);
+    // XXX: inefficient
+    const auto human_robots = human_sim_rec_.getRobots();
+    ctl.updateHumanPose(human_robots->robot(), h);
   }
 
   output("True");
@@ -249,18 +296,22 @@ void HumanPose::calibrateSensorPose(mc_control::fsm::Controller & ctl_,
   auto & tracker_online_func =
       ctl.datastore().get<std::function<bool(const std::string &)>>("OpenVRPlugin::deviceOnline");
 
+  // raw vive tracker position for the robot head
   const sva::PTransformd X_0_robotTracker = (has_tracker_func(robot_device_) && tracker_online_func(robot_device_))
                                                 ? tracker_pose_func(robot_device_)
                                                 : sva::PTransformd::Identity(); // Vive tracker on the robot
 
-  const auto X_0_RobotRefLink = robot.bodyPosW(robot_link_);
+  const auto X_0_RobotRefLink = robot.frame(robot_link_).position();
+  // + offset frame
   const auto X_0_RobotLink = link_calib_offset_ * robot.frame(robot_link).position();
 
+  // Hand tracker (on human) for calibration
   if(has_tracker_func(device) && tracker_online_func(device))
   {
     X_0_calibTarget_ = X_0_RobotLink; // Where the calib sensor should be placed
 
     const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device);
+    // relative pose between both calibration trackers (in vive frames)
     const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv();
 
     const Eigen::Vector3d T_robotTracker_tracker_0 = X_0_RobotRefLink.rotation().transpose()

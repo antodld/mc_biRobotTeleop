@@ -1,3 +1,4 @@
+---
 ci:
   autoupdate_schedule: quarterly
 repos:
@@ -9,7 +10,7 @@ repos:
   rev: v20.1.7
   hooks:
   - id: clang-format
-    'types_or': [c++, c]
+    types_or: [c++, c]
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:
@@ -17,8 +18,11 @@ repos:
   - id: check-ast
   - id: check-merge-conflict
   - id: check-yaml
-    # XXX this controller uses custom cmake macro "@file.yaml" to include yaml files. This makes yaml check fail before generating final yaml file.
-    exclude: \.in\.yaml$
+    # XXX panda_hrp4 configuration has not been updated to have correct yaml yet
+    exclude: |
+      (?x)^(
+        etc\.panda_hrp4/.*
+      )$
   - id: debug-statements
   - id: destroyed-symlinks
   - id: detect-private-key
@@ -26,6 +30,16 @@ repos:
   - id: fix-byte-order-marker
   - id: mixed-line-ending
   - id: trailing-whitespace
+- repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+  rev: 0.2.3  # or other specific tag
+  hooks:
+  - id: yamlfmt
+    args: [--mapping, '2', --sequence, '2', --offset, '0', --width, '100', "--preserve-quotes"]
+      # XXX panda_hrp4 configuration has not been updated to have correct yaml yet
+    exclude: |
+      (?x)^(
+        etc\.panda_hrp4/.*
+      )$
 - repo: https://github.com/cheshirekow/cmake-format-precommit
   rev: v0.6.13
   hooks:
@@ -33,6 +47,6 @@ repos:
 - repo: https://github.com/compilerla/conventional-pre-commit
   rev: v4.2.0
   hooks:
-    - id: conventional-pre-commit
-      stages: [commit-msg]
-      args: []
+  - id: conventional-pre-commit
+    stages: [commit-msg]
+    args: []

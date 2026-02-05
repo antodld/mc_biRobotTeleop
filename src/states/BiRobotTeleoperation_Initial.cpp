@@ -16,6 +16,13 @@ void BiRobotTeleoperation_Initial::start(mc_control::fsm::Controller & ctl_)
 bool BiRobotTeleoperation_Initial::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  // Wait for a mode to be selected
+  if(ctl.mode() == BiRobotTeleoperation::Mode::None)
+  {
+    output("Mode::None");
+    return false;
+  }
+
   ctl.CalibrateExtWrench(ctl.realRobot("robot_1"));
   ctl.CalibrateExtWrench(ctl.realRobot("robot_2"));
   count_++;

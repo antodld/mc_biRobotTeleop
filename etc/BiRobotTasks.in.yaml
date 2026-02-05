@@ -1,35 +1,52 @@
-  BiTeleopTask_1:
-    base: BiRobotTeleoperation_Task
-    name: biRobotTask_1
-    use_estimated_human: true
-    stiffness: 5
-    softMaxGain: 40
-    deltaDistGain: 0
-    weight: 10
-    arrow:
-      shaft_diam: 0.005
-    linearWeight:
-      # weightRange: [5,20]
-      weightRange: [10,500]
-      distanceRange: [0.4,0.1]
-    robot_1:
-      name: robot_1
-      links: [LeftHand]
-      unactive_joints: ["Root","CHEST_P","CHEST_Y"]
-    robot_2:
-      name: "robot_2"
-      # links: ["RightArm","RightForearm","RightHand"]
-      links: ["RightArm","RightForearm"]
-      unactive_joints: ["Root","CHEST_P","CHEST_Y"]
+---
+BiTeleopTask_1:
+  base: BiRobotTeleoperation_Task
+  name: biRobotTask_1
+  use_estimated_human: true
+  stiffness: 5
+  softMaxGain: 40
+  deltaDistGain: 0
+  weight: 10
+  arrow:
+    shaft_diam: 0.005
+  linearWeight:
+    # weightRange: [5,20]
+    weightRange: [10, 500]
+    distanceRange: [0.4, 0.1]
+  robot_1:
+    name: robot_1
+    links: [LeftHand]
+    unactive_joints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2
+    # unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
+    robot_to_human_transfo:
+      simu:
+        translation: [0., 0., 0.]
+        rotation: [0, 1.57, -1.57] # for human
+      vr:
+        translation: [0., 0., 0.]
+        rotation: [1.57, 0., 0.] # for human
+  robot_2:
+    name: "robot_2"
+    # links: ["RightArm","RightForearm","RightHand"]
+    links: ["RightArm", "RightForearm"]
+    unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
+    robot_to_human_transfo:
+      simu:
+        translation: [0., 0., 0.]
+        rotation: [-1.57, 0., 0.] # for human
+      vr:
+        translation: [0., 0., 0.]
+        rotation: [-1.57, 0., 0.] # for human
 
-  BiTeleopTask_2:
-    base: BiTeleopTask_1
-    name: biRobotTask_2
-    use_estimated_human: true
-    arrow:
-      color: [0,0,255,1]
-    robot_1:
-      links: [LeftArm,LeftForearm,LeftHand]
-    robot_2:
-      isMainRobot: 0
-      links: ["RightHand"]
+
+BiTeleopTask_2:
+  base: BiTeleopTask_1
+  name: biRobotTask_2
+  use_estimated_human: true
+  arrow:
+    color: [0, 0, 255, 1]
+  robot_1:
+    links: [LeftArm, LeftForearm, LeftHand]
+  robot_2:
+    isMainRobot: 0
+    links: ["RightHand"]

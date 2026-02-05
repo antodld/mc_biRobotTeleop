@@ -1,37 +1,48 @@
-#human_1 paramters
+---
+# Human parameters for "human" robot module
+# use convex -> limb name -> radius/length properties to use cylinders as convex shapes
+# otherwise the human robot's convexes are used
+
+# human_1 paramters
 human_1:
   convex:
     pelvis:
       offset:
         #mc_human
-        rotation: [0,0,0]
+
+        # translation: [0, 0.15, 0.1]
+        rotation: [0, -1.57, -1.57]
     arm:
-      radius: 0.05
-      length: 0.2
+      # radius: 0.05
+      # length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [0, 0, 3.14]
+          # translation: [0, 0.2, 0.07]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [-1.57, 0, 0]
+          # translation: [0, 0.2, 0.07]
     forearm:
-      radius: 0.03
-      length: 0.2
+      # radius: 0.03
+      # length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [0, 0, 3.14]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [-1.57, 0, 0]
     hand:
-      radius: 0.03
-      length: 0.1
+      # radius: 0.03
+      # length: 0.1
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [0, 3.14, 3.14]
+          # translation: [-0.05, 0.12, 0.05]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [-1.57, 0, 0]
+          # translation: [-0.05, 0.12, 0.05]
 
 #human_2 paramters
 human_2:
@@ -39,31 +50,34 @@ human_2:
     pelvis:
       offset:
         #mc_human
-        rotation: [0,0,0]
+        #rotation: [0, 0, 0]
+        rotation: [0, -1.57, -1.57]
     arm:
-      radius: 0.05
-      length: 0.2
+      # radius: 0.05
+      # length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [1.57, 0, 0]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [0.0, 3.14, 0]
     forearm:
-      radius: 0.03
-      length: 0.2
+      # radius: 0.03
+      # length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [1.57, 0, 0]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [0, 3.14, 0]
     hand:
-      radius: 0.03
-      length: 0.1
+      # radius: 0.03
+      # length: 0.1
       offset:
         # mc_human
         left:
-          rotation: [1.57,0,0]
+          rotation: [1.57, 0, 0]
+          # translation: [-0.05, 0.12, 0.05]
         right:
-          rotation: [-1.57,0,0]
+          rotation: [0, 3.14, 0]
+          # translation: [-0.05, 0.12, 0.05]

@@ -10,8 +10,6 @@
 
 struct HumanPose : mc_control::fsm::State
 {
-  void configure(const mc_rtc::Configuration & config) override;
-
   void start(mc_control::fsm::Controller & ctl) override;
 
   bool run(mc_control::fsm::Controller & ctl) override;
@@ -39,6 +37,8 @@ struct HumanPose : mc_control::fsm::State
   sva::PTransformd X_link_sensor_; // Transfo between sensor pose and link pose
   sva::PTransformd offset_global;
 
+  // mc_filter::LowPass<sva::PTransformd>
+
   std::map<biRobotTeleop::Limbs, int>
       online_data_count_; // One counter for each limbs, reseted each time a data has been updated, set the data as
                           // offline if the counter is above a threshold
@@ -58,4 +58,7 @@ struct HumanPose : mc_control::fsm::State
   std::string calibration_device_;
   sva::PTransformd link_calib_offset_ = sva::PTransformd::Identity();
   sva::PTransformd X_0_calibTarget_ = sva::PTransformd::Identity();
+
+  mc_rbdyn::RobotModulePtr viveTrackerModule_ = nullptr;
+  mc_rbdyn::RobotsPtr viveTrackersRobots_ = nullptr;
 };

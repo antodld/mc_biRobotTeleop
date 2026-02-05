@@ -1,14 +1,6 @@
 #pragma once
 
-#include <mc_control/ControllerServer.h>
-#include <mc_control/MCController.h>
 #include <mc_control/fsm/Controller.h>
-#include <mc_control/mc_controller.h>
-#include <mc_rbdyn/RobotLoader.h>
-#include <mc_rtc/gui.h>
-
-#include <ros/ros.h>
-#include <visualization_msgs/MarkerArray.h>
 
 #include "api.h"
 #include <biRobotTeleop/HumanRobotDataReceiver.h>
@@ -16,9 +8,54 @@
 #include <mc_joystick_plugin/joystick_inputs.h>
 #include <mc_rtc_ros/ros.h>
 
+namespace mc_control
+{
+struct ControllerServer;
+}
+
+namespace mc_rtc::gui
+{
+struct StateBuilder;
+}
+
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {
+  enum class Mode
+  {
+    None,
+    SimulationSingle,
+    SingleVR,
+    DualVR
+  };
+  inline static std::string to_string(Mode mode)
+  {
+    switch(mode)
+    {
+      case Mode::None:
+        return "None";
+      case Mode::SimulationSingle:
+        return "SimulationSingle";
+      case Mode::SingleVR:
+        return "SingleVR";
+      case Mode::DualVR:
+        return "DualVR";
+      default:
+        return "Unknown";
+    }
+  }
+  inline static Mode from_string(const std::string & str)
+  {
+    if(str == "None") return Mode::None;
+    if(str == "SimulationSingle") return Mode::SimulationSingle;
+    if(str == "SingleVR") return Mode::SingleVR;
+    if(str == "DualVR") return Mode::DualVR;
+    return Mode::None; // or throw std::invalid_argument("Unknown Mode string")
+  }
+
   BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config);
+
+  void init_();
+  void reset_();
 
   bool run() override;
 
@@ -145,11 +182,6 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return gui_builder_;
   }
 
-  const bool useRos() const noexcept
-  {
-    return use_ros_;
-  }
-
   bool joystickButtonPressed(const joystickButtonInputs input);
 
   void hardEmergency()
@@ -198,7 +230,13 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   std::vector<sva::ForceVecd> external_wrench_calib_;
 
-private:
+  inline Mode mode() const noexcept
+  {
+    return mode_;
+  }
+
+protected:
+  Mode mode_{Mode::None};
   std::unique_ptr<mc_control::ControllerServer> server_;
   mc_rtc::gui::StateBuilder gui_builder_;
   bool emergency_ = false;
@@ -215,12 +253,7 @@ private:
 
   mc_rtc::Configuration global_config_;
 
-  ros::Publisher sch_pub_;
-  visualization_msgs::MarkerArray markers_;
-
   bool useFilteredData_ = false;
-
-  bool use_ros_ = false;
 
   size_t ctl_count_ = 0;
 
